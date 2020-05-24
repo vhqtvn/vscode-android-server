@@ -1,3 +1,6 @@
 [submodule "code-server"]
 	path = code-server
 	url = git@github.com:vhqtvn/code-server.git
+[submodule "node"]
+	path = node
+	url = https://github.com/nodejs/node

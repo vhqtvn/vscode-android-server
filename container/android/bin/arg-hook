@@ -4,4 +4,4 @@ import sys, os
 
 cwd = os.getcwd()
 
-print "-I/vscode/ci/container/android/patch",
+print "-I/vscode-build/patch",

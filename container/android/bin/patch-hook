@@ -9,7 +9,13 @@ for a in sys.argv:
         print("[vh] Patch InotifyEventLoop")
         with open(a,"r") as f:
             content = f.read()
-        content = "#include \""+("../"*20)+"/vscode/ci/container/android/patch/bthread-pthread_cancel.h\"\n"+content
+        content = "#include \""+("../"*20)+"/vscode-build/patch/bthread-pthread_cancel.h\"\n"+content
+        with open(a,"w") as f:
+            f.write(content)
+    elif ("keytar_posix.cc" in a) and os.path.isfile(a):
+        print("[vh] Patch keytar_posix.cc")
+        with open("/vscode-build/patch/keytar_posix.cc","r") as f:
+            content = f.read()
         with open(a,"w") as f:
             f.write(content)
     elif ('native-keymap' in cwd) and ('keysym_to_unicode.cc' in a) and os.path.isfile(a):

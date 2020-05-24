@@ -30,5 +30,8 @@ RUN apt -y autoremove
 
 RUN apt-get -y update && apt-get install -y make vim nano
 
-ENV NDK=/opt/android-ndk
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test && apt-get update && apt-get install gcc-6 g++-6 -y
 
+ENV NDK=/opt/android-ndk
+ENV NDK_BIN_ROOT=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin
+ENV ANDROID_ARCH=aarch64
