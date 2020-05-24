@@ -1,0 +1,372 @@
+diff -x node_modules -x build -x .build -x 'out-*' -x out -ru vscode.orig/src/vs/base/browser/ui/dialog/dialog.css vscode/src/vs/base/browser/ui/dialog/dialog.css
+--- vscode.orig/src/vs/base/browser/ui/dialog/dialog.css	2020-05-23 06:48:43.809321112 +0000
++++ vscode/src/vs/base/browser/ui/dialog/dialog.css	2020-05-23 08:21:30.063609920 +0000
+@@ -24,7 +24,7 @@
+ 	display: flex;
+ 	flex-direction: column-reverse;
+ 	width: min-content;
+-	min-width: 500px;
++	min-width: 50vw;
+ 	max-width: 90vw;
+ 	min-height: 75px;
+ 	padding: 10px;
+diff -x node_modules -x build -x .build -x 'out-*' -x out -ru vscode.orig/src/vs/editor/contrib/find/findWidget.css vscode/src/vs/editor/contrib/find/findWidget.css
+--- vscode.orig/src/vs/editor/contrib/find/findWidget.css	2020-05-23 06:48:43.873321049 +0000
++++ vscode/src/vs/editor/contrib/find/findWidget.css	2020-05-23 08:08:24.789086656 +0000
+@@ -185,12 +185,12 @@
+ 
+ /* NARROW (SMALLER THAN REDUCED) */
+ .monaco-editor .find-widget.narrow-find-widget {
+-	max-width: 257px !important;
++	max-width: calc(100vw - 90px) !important;
+ }
+ 
+ /* COLLAPSED (SMALLER THAN NARROW) */
+ .monaco-editor .find-widget.collapsed-find-widget {
+-	max-width: 170px !important;
++	max-width: calc(100vw - 90px) !important;
+ }
+ 
+ .monaco-editor .find-widget.collapsed-find-widget .button.previous,
+diff -x node_modules -x build -x .build -x 'out-*' -x out -ru vscode.orig/src/vs/workbench/browser/parts/activitybar/activitybarPart.ts vscode/src/vs/workbench/browser/parts/activitybar/activitybarPart.ts
+--- vscode.orig/src/vs/workbench/browser/parts/activitybar/activitybarPart.ts	2020-05-23 06:48:43.901321022 +0000
++++ vscode/src/vs/workbench/browser/parts/activitybar/activitybarPart.ts	2020-05-23 07:41:06.549760033 +0000
+@@ -72,14 +72,14 @@
+ 
+ 	_serviceBrand: undefined;
+ 
+-	private static readonly ACTION_HEIGHT = 48;
++	private static readonly ACTION_HEIGHT = 24;
+ 	static readonly PINNED_VIEWLETS = 'workbench.activity.pinnedViewlets2';
+ 	private static readonly PLACEHOLDER_VIEWLETS = 'workbench.activity.placeholderViewlets';
+ 
+ 	//#region IView
+ 
+-	readonly minimumWidth: number = 48;
+-	readonly maximumWidth: number = 48;
++	readonly minimumWidth: number = 24;
++	readonly maximumWidth: number = 24;
+ 	readonly minimumHeight: number = 0;
+ 	readonly maximumHeight: number = Number.POSITIVE_INFINITY;
+ 
+diff -x node_modules -x build -x .build -x 'out-*' -x out -ru vscode.orig/src/vs/workbench/browser/parts/activitybar/media/activityaction.css vscode/src/vs/workbench/browser/parts/activitybar/media/activityaction.css
+--- vscode.orig/src/vs/workbench/browser/parts/activitybar/media/activityaction.css	2020-05-23 06:48:43.901321022 +0000
++++ vscode/src/vs/workbench/browser/parts/activitybar/media/activityaction.css	2020-05-23 08:19:33.168528987 +0000
+@@ -17,7 +17,7 @@
+ .monaco-workbench .activitybar > .content .composite-bar > .monaco-action-bar .action-item::after {
+ 	position: absolute;
+ 	content: '';
+-	width: 48px;
++	width: 24px;
+ 	height: 2px;
+ 	display: block;
+ 	background-color: var(--insert-border-color);
+@@ -61,20 +61,20 @@
+ 	z-index: 1;
+ 	display: flex;
+ 	overflow: hidden;
+-	height: 48px;
++	height: 32px;
+ 	margin-right: 0;
+ 	box-sizing: border-box;
+ 
+ }
+ 
+ .monaco-workbench .activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-label:not(.codicon) {
+-	font-size: 15px;
++	font-size: 11px;
+ 	line-height: 40px;
+-	padding: 0 0 0 48px;
++	padding: 0 0 0 24px;
+ }
+ 
+ .monaco-workbench .activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-label.codicon {
+-	font-size: 24px;
++	font-size: 18px;
+ 	align-items: center;
+ 	justify-content: center;
+ }
+@@ -148,15 +148,16 @@
+ 
+ .monaco-workbench .activitybar > .content :not(.monaco-menu) > .monaco-action-bar .badge .badge-content {
+ 	position: absolute;
+-	top: 24px;
+-	right: 8px;
++	top: 18px;
++	right: -1px;
++	opacity: 0.7;
+ 	font-size: 9px;
+ 	font-weight: 600;
+ 	min-width: 8px;
+ 	height: 16px;
+ 	line-height: 16px;
+ 	padding: 0 4px;
+-	border-radius: 20px;
++	border-radius: 10px;
+ 	text-align: center;
+ }
+ 
+@@ -164,7 +165,7 @@
+ 
+ .monaco-workbench .activitybar.right > .content :not(.monaco-menu) > .monaco-action-bar .action-label:not(.codicon) {
+ 	margin-left: 0;
+-	padding: 0 48px 0 0;
++	padding: 0 24px 0 0;
+ 	background-position: calc(100% - 9px) center;
+ }
+ 
+diff -x node_modules -x build -x .build -x 'out-*' -x out -ru vscode.orig/src/vs/workbench/browser/parts/activitybar/media/activitybarpart.css vscode/src/vs/workbench/browser/parts/activitybar/media/activitybarpart.css
+--- vscode.orig/src/vs/workbench/browser/parts/activitybar/media/activitybarpart.css	2020-05-23 06:48:43.901321022 +0000
++++ vscode/src/vs/workbench/browser/parts/activitybar/media/activitybarpart.css	2020-05-23 07:39:47.213962752 +0000
+@@ -4,7 +4,7 @@
+  *--------------------------------------------------------------------------------------------*/
+ 
+ .monaco-workbench .part.activitybar {
+-	width: 48px;
++	width: 24px;
+ 	height: 100%;
+ }
+ 
+@@ -28,7 +28,7 @@
+ .monaco-workbench .activitybar > .content > .home-bar {
+ 	position: relative;
+ 	width: 100%;
+-	height: 48px;
++	height: 24px;
+ 	display: flex;
+ 	align-items: center;
+ 	justify-content: center;
+@@ -37,8 +37,8 @@
+ 
+ .monaco-workbench .activitybar > .content > .home-bar > .home-bar-icon-badge {
+ 	position: absolute;
+-	right: 10px;
+-	bottom: 9px;
++	right: 5px;
++	bottom: 4px;
+ 	width: 14px;
+ 	height: 14px;
+ 	z-index: 1; /* on top of home indicator */
+@@ -74,10 +74,10 @@
+ 
+ .monaco-workbench .activitybar .menubar {
+ 	width: 100%;
+-	height: 35px;
++	height: 18px;
+ }
+ 
+ .monaco-workbench .activitybar .menubar.compact .toolbar-toggle-more {
+ 	width: 100%;
+-	height: 35px;
++	height: 18px;
+ }
+diff -x node_modules -x build -x .build -x 'out-*' -x out -ru vscode.orig/src/vs/workbench/browser/parts/editor/media/tabstitlecontrol.css vscode/src/vs/workbench/browser/parts/editor/media/tabstitlecontrol.css
+--- vscode.orig/src/vs/workbench/browser/parts/editor/media/tabstitlecontrol.css	2020-05-23 06:48:43.901321022 +0000
++++ vscode/src/vs/workbench/browser/parts/editor/media/tabstitlecontrol.css	2020-05-23 07:50:25.656072679 +0000
+@@ -38,7 +38,7 @@
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container {
+ 	display: flex;
+-	height: 35px;
++	height: 18px;
+ 	scrollbar-width: none; /* Firefox: hide scrollbar */
+ }
+ 
+@@ -57,9 +57,9 @@
+ 	display: flex;
+ 	white-space: nowrap;
+ 	cursor: pointer;
+-	height: 35px;
++	height: 18px;
+ 	box-sizing: border-box;
+-	padding-left: 10px;
++	padding-left: 5px;
+ }
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab.sizing-shrink.has-icon-theme.close-button-right,
+@@ -68,14 +68,14 @@
+ }
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab.sizing-fit {
+-	width: 120px;
++	width: 90px;
+ 	min-width: fit-content;
+ 	min-width: -moz-fit-content;
+ 	flex-shrink: 0;
+ }
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab.sizing-shrink {
+-	min-width: 60px;
++	min-width: 45px;
+ 	flex-basis: 0; /* all tabs are even */
+ 	flex-grow: 1; /* all tabs grow even */
+ 	max-width: fit-content;
+@@ -95,7 +95,7 @@
+ }
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab.sizing-shrink.close-button-left {
+-	min-width: 80px; /* make more room for close button when it shows to the left */
++	min-width: 40px; /* make more room for close button when it shows to the left */
+ 	padding-right: 5px; /* we need less room when sizing is shrink */
+ }
+ 
+@@ -110,7 +110,7 @@
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab.close-button-left {
+ 	flex-direction: row-reverse;
+ 	padding-left: 0;
+-	padding-right: 10px;
++	padding-right: 5px;
+ }
+ 
+ /* Tab border top/bottom */
+@@ -280,24 +280,24 @@
+ 	cursor: default;
+ 	flex: initial;
+ 	padding: 0 8px 0 4px;
+-	height: 35px;
++	height: 18px;
+ }
+ 
+ /* Breadcrumbs */
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-breadcrumbs .breadcrumbs-control {
+ 	flex: 1 100%;
+-	height: 22px;
++	height: 11px;
+ 	cursor: default;
+ }
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-breadcrumbs .breadcrumbs-control .monaco-icon-label {
+-	height: 22px;
+-	line-height: 22px;
++	height: 11px;
++	line-height: 11px;
+ }
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-breadcrumbs .breadcrumbs-control .monaco-icon-label::before {
+-	height: 22px; /* tweak the icon size of the editor labels when icons are enabled */
++	height: 11px; /* tweak the icon size of the editor labels when icons are enabled */
+ }
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-breadcrumbs  .breadcrumbs-control .monaco-breadcrumb-item {
+@@ -305,13 +305,13 @@
+ }
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-breadcrumbs  .breadcrumbs-control .monaco-breadcrumb-item::before {
+-	width: 16px;
+-	height: 22px;
++	width: 8px;
++	height: 11px;
+ 	display: flex;
+ 	align-items: center;
+ 	justify-content: center;
+ }
+ 
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-breadcrumbs  .breadcrumbs-control .monaco-breadcrumb-item:last-child {
+-	padding-right: 8px;
++	padding-right: 4px;
+ }
+diff -x node_modules -x build -x .build -x 'out-*' -x out -ru vscode.orig/src/vs/workbench/browser/parts/editor/media/titlecontrol.css vscode/src/vs/workbench/browser/parts/editor/media/titlecontrol.css
+--- vscode.orig/src/vs/workbench/browser/parts/editor/media/titlecontrol.css	2020-05-23 06:48:43.901321022 +0000
++++ vscode/src/vs/workbench/browser/parts/editor/media/titlecontrol.css	2020-05-23 08:01:08.198257721 +0000
+@@ -31,11 +31,11 @@
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .title-actions .action-label,
+ .monaco-workbench .part.editor > .content .editor-group-container > .title .editor-actions .action-label {
+ 	display: flex;
+-	height: 35px;
+-	min-width: 28px;
++	height: 17px;
++	min-width: 14px;
+ 	align-items: center;
+ 	justify-content: center;
+-	background-size: 16px;
++	background-size: 8px;
+ 	background-position: center center;
+ 	background-repeat: no-repeat;
+ }
+diff -x node_modules -x build -x .build -x 'out-*' -x out -ru vscode.orig/src/vs/workbench/browser/parts/titlebar/media/titlebarpart.css vscode/src/vs/workbench/browser/parts/titlebar/media/titlebarpart.css
+--- vscode.orig/src/vs/workbench/browser/parts/titlebar/media/titlebarpart.css	2020-05-23 06:48:43.901321022 +0000
++++ vscode/src/vs/workbench/browser/parts/titlebar/media/titlebarpart.css	2020-05-23 07:46:29.928800851 +0000
+@@ -14,8 +14,8 @@
+ 	user-select: none;
+ 	-webkit-user-select: none;
+ 	zoom: 1; /* prevent zooming */
+-	line-height: 22px;
+-	height: 22px;
++	line-height: 15px;
++	height: 15px;
+ 	display: flex;
+ }
+ 
+@@ -31,7 +31,7 @@
+ 
+ .monaco-workbench .part.titlebar > .window-title {
+ 	flex: 0 1 auto;
+-	font-size: 12px;
++	font-size: 10px;
+ 	overflow: hidden;
+ 	white-space: nowrap;
+ 	text-overflow: ellipsis;
+@@ -45,8 +45,8 @@
+ .monaco-workbench.windows .part.titlebar,
+ .monaco-workbench.linux .part.titlebar {
+ 	padding: 0;
+-	height: 30px;
+-	line-height: 30px;
++	height: 18px;
++	line-height: 18px;
+ 	justify-content: left;
+ 	overflow: visible;
+ }
+@@ -81,7 +81,7 @@
+ }
+ 
+ .monaco-workbench .part.titlebar > .window-appicon {
+-	width: 35px;
++	width: 18px;
+ 	height: 100%;
+ 	position: relative;
+ 	z-index: 3000;
+@@ -116,10 +116,10 @@
+ 
+ .monaco-workbench .part.titlebar > .window-controls-container > .window-icon {
+ 	display: inline-block;
+-	line-height: 30px;
++	line-height: 15px;
+ 	height: 100%;
+-	width: 46px;
+-	font-size: 16px;
++	width: 25px;
++	font-size: 12px;
+ }
+ 
+ .monaco-workbench .part.titlebar > .window-controls-container > .window-icon:hover {
+diff -x node_modules -x build -x .build -x 'out-*' -x out -ru vscode.orig/src/vs/workbench/contrib/preferences/browser/keyboardLayoutPicker.ts vscode/src/vs/workbench/contrib/preferences/browser/keyboardLayoutPicker.ts
+--- vscode.orig/src/vs/workbench/contrib/preferences/browser/keyboardLayoutPicker.ts	2020-05-23 06:48:43.917321006 +0000
++++ vscode/src/vs/workbench/contrib/preferences/browser/keyboardLayoutPicker.ts	2020-05-23 08:33:33.483474347 +0000
+@@ -35,7 +35,7 @@
+ 		let layout = this.keymapService.getCurrentKeyboardLayout();
+ 		if (layout) {
+ 			let layoutInfo = parseKeyboardLayoutDescription(layout);
+-			const text = nls.localize('keyboardLayout', "Layout: {0}", layoutInfo.label);
++			const text = nls.localize('xmobileKeyboardLayout', "KL:{0}", layoutInfo.label);
+ 
+ 			this.pickerElement.value = this.statusbarService.addEntry(
+ 				{
+@@ -54,14 +54,14 @@
+ 			let layoutInfo = parseKeyboardLayoutDescription(layout);
+ 
+ 			if (this.pickerElement.value) {
+-				const text = nls.localize('keyboardLayout', "Layout: {0}", layoutInfo.label);
++				const text = nls.localize('xmobileKeyboardLayout', "KL:{0}", layoutInfo.label);
+ 				this.pickerElement.value.update({
+ 					text,
+ 					ariaLabel: text,
+ 					command: KEYBOARD_LAYOUT_OPEN_PICKER
+ 				});
+ 			} else {
+-				const text = nls.localize('keyboardLayout', "Layout: {0}", layoutInfo.label);
++				const text = nls.localize('xmobileKeyboardLayout', "KL:{0}", layoutInfo.label);
+ 				this.pickerElement.value = this.statusbarService.addEntry(
+ 					{
+ 						text,

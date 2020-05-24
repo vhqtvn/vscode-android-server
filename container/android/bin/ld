@@ -1,0 +1,19 @@
+#!/usr/bin/python
+
+import sys, os
+from subprocess import Popen, PIPE, STDOUT
+
+
+cmd = ([
+    os.getenv('NDK_BIN_ROOT')+'/'+os.getenv('ANDROID_ARCH')+'-linux-android26-clang++'] 
+        + [x
+        for x in sys.argv[1:]
+    if x not in ['-lutil']
+])
+if ('-shared' in cmd) and ('-fPIC' not in cmd):
+    idx = cmd.index('-shared')
+    cmd = cmd[:idx+1] + ['-fPIC'] + cmd[idx+1:]
+print(cmd)
+p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+output = p.stdout.read()
+print(output)

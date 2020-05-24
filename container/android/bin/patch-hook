@@ -1,0 +1,45 @@
+#!/usr/bin/python
+
+import sys, os, re
+
+cwd = os.getcwd()
+
+for a in sys.argv:
+    if ("InotifyEventLoop.cpp" in a) and os.path.isfile(a):
+        print("[vh] Patch InotifyEventLoop")
+        with open(a,"r") as f:
+            content = f.read()
+        content = "#include \""+("../"*20)+"/vscode/ci/container/android/patch/bthread-pthread_cancel.h\"\n"+content
+        with open(a,"w") as f:
+            f.write(content)
+    elif ('native-keymap' in cwd) and ('keysym_to_unicode.cc' in a) and os.path.isfile(a):
+        print("[vh] Patch native-keymap x11")
+        with open(a,"r") as f:
+            content = f.read()
+        for sym in [
+            'XK_dead_doublegrave',
+            'XK_dead_belowring',
+            'XK_dead_belowmacron',
+            'XK_dead_belowcircumflex',
+            'XK_dead_belowtilde',
+            'XK_dead_belowbreve',
+            'XK_dead_belowdiaeresis',
+            'XK_dead_invertedbreve',
+            'XK_dead_belowcomma',
+            'XK_dead_currency',
+        ]:
+            content = re.sub('[^\n\r]+'+sym+'[^\n\r]+','',content)
+        with open(a,"w") as f:
+            f.write(content)
+    elif ('native-keymap' in cwd) and ('keyboard_x.cc' in a) and os.path.isfile(a):
+        print("[vh] Patch native-keymap keyboard")
+        with open(a,"r") as f:
+            content = f.read()
+        for sym in [
+            'X11/extensions/XKBrules',
+        ]:
+            content = re.sub('[^\n\r]+'+sym+'[^\n\r]+','',content)
+        content = re.sub('XkbRF_VarDefsRec.*XCloseDisplay\(display\);','',content, flags=re.S)
+        with open(a,"w") as f:
+            f.write(content)
+            

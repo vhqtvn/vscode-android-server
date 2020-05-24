@@ -1,0 +1,4 @@
+#!/bin/sh
+echo $NDK_BIN_ROOT/$ANDROID_ARCH-linux-android26-clang -fPIC $(arg-hook $@) $@
+patch-hook -fPIC $@
+$NDK_BIN_ROOT/$ANDROID_ARCH-linux-android26-clang -fPIC $(arg-hook $@) $@
