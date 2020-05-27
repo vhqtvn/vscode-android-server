@@ -19,9 +19,14 @@ main() {
       build-android-env)
         docker build ./container/android -t vsandroidenv:latest
         ;;
+      rebuild-server)
+        cd code-server/lib/vscode
+        CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn
+        ;;
       release)
         if [ ! -z "$BUILD_RELEASE" ]; then
           cd code-server
+          date +'%Y%m%d%H%M' > VERSION
           rm -rf release release-static
           yarn release
           yarn release:static
@@ -30,7 +35,7 @@ main() {
           cd ../..
         fi
         rm -f cs.tar.gz
-        tar -czvf cs.tar.gz code-server/release-static
+        tar -czvf cs.tar.gz code-server/VERSION code-server/release-static
         ;;
       *)
         docker run --rm -it \
