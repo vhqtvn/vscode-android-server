@@ -19,23 +19,23 @@ main() {
       build-android-env)
         docker build ./container/android -t vsandroidenv:latest
         ;;
-      rebuild-server)
-        cd code-server/lib/vscode
-        CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn
-        ;;
       release)
+        set -x
         if [ ! -z "$BUILD_RELEASE" ]; then
           cd code-server
-          date +'%Y%m%d%H%M' > VERSION
-          rm -rf release release-static
-          yarn release
-          yarn release:static
+          rm -rf release release-static || true
+          cd lib/vscode && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn
+          cd ../..
+          CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn build
+          CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn build:vscode
+          CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release
+          CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release:static
           cd release-static
           CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --production --frozen-lockfile
           cd ../..
         fi
         rm -f cs.tar.gz
-        tar -czvf cs.tar.gz code-server/VERSION code-server/release-static
+        tar -czvf cs.tgz code-server/release-static code-server/VERSION
         ;;
       *)
         docker run --rm -it \

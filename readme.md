@@ -1,5 +1,3 @@
 # Android VSCode Server
 
-```
-vscode.orig
-```
+Build VSCode Server for Android.
