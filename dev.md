@@ -28,7 +28,7 @@ Comment out gcc version check
 
 Run configure:
 ```
-PATH=/vscode-build/hostbin:$PATH ./android-configure /opt/android-ndk/ $ANDROID_ARCH 26
+PATH=/vscode-build/hostbin:$PATH ./android-configure /opt/android-ndk/ $ANDROID_ARCH 21
 JOBS=10 make -j 10 # lol... just for sure
 ```
 
@@ -39,6 +39,5 @@ CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$
 ```
 
 ```
-yarn release
-yarn release:static
+yarn release && yarn release:static
 ```
