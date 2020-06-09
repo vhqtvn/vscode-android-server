@@ -40,11 +40,12 @@ main() {
       *)
         docker run --rm -it \
                 -w /vscode \
+                -e ANDROID_BUILD_API_VERSION=24 \
                 -v $(pwd):/vscode \
                 -v $(pwd)/container/android:/vscode-build \
                 -v $(pwd)/node:/vscode-node \
                 -v $(pwd)/.git/modules/code-server:/.git/modules/code-server \
-                vsandroidenv:latest bash
+                vsandroidenv:latest bash; exit $?
         ;;
     esac
 }

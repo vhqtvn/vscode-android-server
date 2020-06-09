@@ -28,7 +28,7 @@ Comment out gcc version check
 
 Run configure:
 ```
-PATH=/vscode-build/hostbin:$PATH ./android-configure /opt/android-ndk/ $ANDROID_ARCH 21
+PATH=/vscode-build/hostbin:$PATH ./android-configure /opt/android-ndk/ $ANDROID_ARCH $ANDROID_BUILD_API_VERSION
 JOBS=10 make -j 10 # lol... just for sure
 ```
 

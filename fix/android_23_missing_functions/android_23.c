@@ -191,3 +191,13 @@ __emutls_get_address (struct __emutls_object *obj)
   return ret;
 #endif
 }
+
+
+
+const char* strchrnul(const char* s, int ch) {
+  while (*s && *s != ch) {
+    ++s;
+  }
+  return s;
+}
+
