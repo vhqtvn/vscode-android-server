@@ -1,4 +1,4 @@
-FROM bitriseio/android-ndk:v2020_03_28-08_15-b1903
+FROM bitriseio/android-ndk:v2020_06_06-08_39-b1988
 RUN apt -y remove gcc g++ clang
 RUN apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
 

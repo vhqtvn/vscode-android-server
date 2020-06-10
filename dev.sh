@@ -40,7 +40,7 @@ main() {
       *)
         docker run --rm -it \
                 -w /vscode \
-                -e ANDROID_BUILD_API_VERSION=24 \
+                -e ANDROID_BUILD_API_VERSION=26 \
                 -v $(pwd):/vscode \
                 -v $(pwd)/container/android:/vscode-build \
                 -v $(pwd)/node:/vscode-node \
