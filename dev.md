@@ -19,6 +19,11 @@ Comment out gcc version check
 # fi
 ```
 
+```
+-        TOOLCHAIN_NAME="armv7-linux-androideabi"
++        TOOLCHAIN_NAME="armv7a-linux-androideabi"
+```
+
 ./configure.py:
 ```py
   o['variables']['want_separate_host_toolset'] = int(
