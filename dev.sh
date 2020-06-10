@@ -34,7 +34,16 @@ main() {
           CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --production --frozen-lockfile
           cd ../..
         fi
-        rm -f cs.tar.gz
+        case $ANDROID_ARCH in
+          arm) ARCH_NAME="armeabi-v7a" ;;
+          x86) ARCH_NAME="x86" ;;
+          x64) ARCH_NAME="x86_64" ;;
+          arm64|aarch64) ARCH_NAME="arm64-v8a" ;;
+          *) echo "Unsupported arch $ANDROID_ARCH"; exit 1; ;;
+        esac
+        rm -f cs.tar.gz libc++_shared.so node
+        cp node-src/out/Release/node ./node
+        cp /opt/android-ndk/sources/cxx-stl/llvm-libc++/libs/$ARCH_NAME/libc++_shared.so ./libc++_shared.so
         tar -czvf cs.tgz code-server/release-static code-server/VERSION
         ;;
       *)
