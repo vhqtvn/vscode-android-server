@@ -24,6 +24,9 @@ Comment out gcc version check
 +        TOOLCHAIN_NAME="armv7a-linux-androideabi"
 ```
 
+change `v8_target_arch=$ARCH` to `v8_target_arch=$DEST_CPU`
+
+
 ./configure.py:
 ```py
   o['variables']['want_separate_host_toolset'] = int(
@@ -53,4 +56,5 @@ yarn release && yarn release:static
 BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=aarch64 ./dev.sh release
 BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=arm ./dev.sh release
 BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=x86_64 ./dev.sh release
+BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=x86 ./dev.sh release
 ```

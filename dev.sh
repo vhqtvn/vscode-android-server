@@ -20,7 +20,6 @@ main() {
         docker build ./container/android -t vsandroidenv:latest
         ;;
       release)
-        set -x
         case $ANDROID_ARCH in
           arm|armeabi-v7a)
             ARCH_NAME="armeabi-v7a"
@@ -43,12 +42,13 @@ main() {
             exit 1
             ;;
         esac
+	set -e
         if [ ! -z "$BUILD_NODE" ]; then
           cd node-src
           rm -rf out || true
           make clean || true
-          PATH=/vscode-build/hostbin:$PATH ./android-configure /opt/android-ndk/ $NODE_CONFIGURE_NAME $ANDROID_BUILD_API_VERSION
-          JOBS=$(nproc) make -j $(nproc)
+          PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $NODE_CONFIGURE_NAME $ANDROID_BUILD_API_VERSION
+          PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
           cd ..
         fi
         if [ ! -z "$BUILD_RELEASE" ]; then
@@ -73,7 +73,7 @@ main() {
       *)
         docker run --rm -it \
                 -w /vscode \
-                -e ANDROID_BUILD_API_VERSION=26 \
+                -e ANDROID_BUILD_API_VERSION=24 \
                 -v $(pwd):/vscode \
                 -v $(pwd)/container/android:/vscode-build \
                 -v $(pwd)/node:/vscode-node \
