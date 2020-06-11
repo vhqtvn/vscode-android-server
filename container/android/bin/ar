@@ -1,2 +1,23 @@
 #!/bin/sh
-$NDK_BIN_ROOT/$ANDROID_ARCH-linux-android-ar $@
+
+case $ANDROID_ARCH in
+    arm|armeabi-v7a)
+        TOOLARCH="arm-linux-androideabi"
+        ;;
+    x86)
+        TOOLARCH="i686-linux-android"
+        ;;
+    x86_64)
+        TOOLARCH="x86_64-linux-android"
+        ;;
+    arm64|aarch64)
+        TOOLARCH="aarch64-linux-android"
+        ;;
+    *)
+        echo "Unsupported arch $ANDROID_ARCH"
+        exit 1
+        ;;
+esac
+
+echo $NDK_BIN_ROOT/$TOOLARCH-ar $@
+$NDK_BIN_ROOT/$TOOLARCH-ar $@

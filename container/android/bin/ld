@@ -2,18 +2,25 @@
 
 import sys, os
 from subprocess import Popen, PIPE, STDOUT
-
+sys.path.append('.')
+from libs import argfix
 
 cmd = ([
-    os.getenv('NDK_BIN_ROOT')+'/'+os.getenv('ANDROID_ARCH')+'-linux-android26-clang++'] 
-        + [x
-        for x in sys.argv[1:]
-    if x not in ['-lutil']
-])
+    os.getenv('NDK_BIN_ROOT')+'/'+{
+        'arm': 'armv7a-linux-androideabi',
+        'armeabi-v7a': 'armv7a-linux-androideabi',
+        'x86': 'i686-linux-android',
+        'x86_64': 'x86_64-linux-android',
+        'x86_64': 'x86_64-linux-android',
+        'arm64': 'aarch64-linux-android',
+        'aarch64': 'aarch64-linux-android',
+    }.get(os.getenv('ANDROID_ARCH'),os.getenv('ANDROID_ARCH') + '-linux-android')+''+os.getenv('ANDROID_BUILD_API_VERSION')+'-clang++'] 
+        + argfix([x for x in sys.argv[1:] if x not in ['-lutil']])
+)
 if ('-shared' in cmd) and ('-fPIC' not in cmd):
     idx = cmd.index('-shared')
     cmd = cmd[:idx+1] + ['-fPIC'] + cmd[idx+1:]
-print(cmd)
+# print(cmd)
 p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
 output = p.stdout.read()
 print(output)

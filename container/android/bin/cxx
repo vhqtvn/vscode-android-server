@@ -1,4 +1,25 @@
 #!/bin/sh
-echo $NDK_BIN_ROOT/$ANDROID_ARCH-linux-android$ANDROID_BUILD_API_VERSION-clang++ -fPIC $(arg-hook $@) $@
+
+case $ANDROID_ARCH in
+    arm|armeabi-v7a)
+        TOOLARCH="armv7a-linux-androideabi"
+        ;;
+    x86)
+        TOOLARCH="i686-linux-android"
+        ;;
+    x86_64)
+        TOOLARCH="x86_64-linux-android"
+        ;;
+    arm64|aarch64)
+        TOOLARCH="aarch64-linux-android"
+        ;;
+    *)
+        echo "Unsupported arch $ANDROID_ARCH"
+        exit 1
+        ;;
+esac
+
+
+echo $NDK_BIN_ROOT/$TOOLARCH$ANDROID_BUILD_API_VERSION-clang++ -fPIC $(arg-hook $@) $(arg-fix $@)
 patch-hook -fPIC $@
-$NDK_BIN_ROOT/$ANDROID_ARCH-linux-android$ANDROID_BUILD_API_VERSION-clang++ -fPIC $(arg-hook $@) $@
+$NDK_BIN_ROOT/$TOOLARCH$ANDROID_BUILD_API_VERSION-clang++ -fPIC $(arg-hook $@) $(arg-fix $@)

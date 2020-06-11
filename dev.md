@@ -46,3 +46,11 @@ CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$
 ```
 yarn release && yarn release:static
 ```
+
+# Rebuild all
+
+```
+BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=aarch64 ./dev.sh release
+BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=arm ./dev.sh release
+BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=x86_64 ./dev.sh release
+```

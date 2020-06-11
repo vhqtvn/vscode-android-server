@@ -3,18 +3,18 @@
 ADDITIONAL_ARGS=
 case $ANDROID_ARCH in
     arm|armeabi-v7a)
-    ADDITIONAL_ARGS="$ADDITIONAL_ARGS -m32"
-    ;;
+        ADDITIONAL_ARGS="$ADDITIONAL_ARGS -m32"
+        ;;
     x86)
-    ADDITIONAL_ARGS="$ADDITIONAL_ARGS -m32"
-    ;;
+        ADDITIONAL_ARGS="$ADDITIONAL_ARGS -m32"
+        ;;
     x86_64)
-    ;;
+        ;;
     arm64|aarch64)
-    ;;
+        ;;
     *)
-    echo "Unsupported arch $ANDROID_ARCH"
-    exit 1
+        echo "Unsupported arch $ANDROID_ARCH"
+        exit 1
     ;;
 esac
 
