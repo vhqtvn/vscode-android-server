@@ -2,3 +2,4 @@ libc++_shared.so
 *.tgz
 node
 *.pyc
+.history
