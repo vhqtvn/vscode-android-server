@@ -34,16 +34,17 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y update \
 
 RUN update-alternatives --remove-all gcc || true; update-alternatives --remove-all g++ || true
 
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test && add-apt-repository ppa:deadsnakes/ppa && \
     DEBIAN_FRONTEND=noninteractive apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install gcc-6 g++-6 gcc-6-multilib g++-6-multilib -y
+    DEBIAN_FRONTEND=noninteractive apt-get install gcc-6 g++-6 gcc-6-multilib g++-6-multilib python3.6 -y
 
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 10 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 10 && \
     update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30 && \
     update-alternatives --set cc /usr/bin/gcc && \
     update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30 && \
-    update-alternatives --set c++ /usr/bin/g++
+    update-alternatives --set c++ /usr/bin/g++ && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install libc6-dev-i386
 

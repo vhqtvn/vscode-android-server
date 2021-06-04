@@ -50,11 +50,18 @@ main() {
         if [ ! -z "$BUILD_NODE" ]; then
           cd node-src
           rm -rf out
-          make clean || true
+          make clean
           PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $NODE_CONFIGURE_NAME $ANDROID_BUILD_API_VERSION
           PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
           cd ..
         fi
+        for f in /usr/lib/node_modules/npm/bin/node-gyp-bin/node-gyp; do
+          if [ ! -f "$f.orig" ]; then
+            mv $f "$f.orig"
+          fi
+          echo -e '#!/bin/bash\necho "okzzz"\nnode-gyp.orig --nodedir /vscode/node-src/ $@' > $f
+          chmod +x $f
+        done
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
             rm -rf release release-standalone node_modules
