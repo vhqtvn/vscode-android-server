@@ -4,7 +4,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt -y install \
     curl dirmngr apt-transport-https lsb-release ca-certificates
 
 # Installs node.
-RUN curl -sSL https://deb.nodesource.com/setup_12.x | bash - && \
+RUN curl -sSL https://deb.nodesource.com/setup_14.x | bash - && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
 
 # Installs yarn.

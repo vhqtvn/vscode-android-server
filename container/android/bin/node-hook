@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [[ "$1" =~ /node-pre-gyp$ ]]; then
+    /vscode-build/bin/patch-gyps
+fi
+
+NODE_BIN="$1"
+shift
+INJECT_ARGS=()
+
+HAS_P=false
+
+for a in "$@"; do
+    if [[ "$a" == "-p" ]]; then
+        HAS_P=true
+    fi
+done
+
+if ! $HAS_P; then
+    INJECT_ARGS+=( --require /vscode-build/lib/node-preload.js )
+fi
+
+if [[ "$1" == "/usr/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js" ]]; then
+    INJECT_ARGS+=( "$1" --nodedir /vscode/node-src/ )
+    shift
+elif [[ "$1" =~ /node-pre-gyp$ ]]; then
+    case "$(basename "$(pwd)")" in
+        argon2)
+            # disable sse
+            sed -i'' "s/target_arch == 'ia32' or target_arch == 'x64'/OS == 'abcdefzzzz'/g" binding.gyp
+            ;;
+        *)
+            ;;
+    esac
+else
+    :
+fi
+
+# echo "> Node run: " $NODE_BIN "${INJECT_ARGS[@]}" "${@}" >&2
+
+LD_PRELOAD=/vscode-build/lib/node-preload.so "$NODE_BIN" "${INJECT_ARGS[@]}" "$@"

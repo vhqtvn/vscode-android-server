@@ -1,0 +1,9 @@
+#!/bin/bash
+
+find /vscode/code-server -type d -name node-pre-gyp | while read d; do
+    if [[ ! -d "$d.orig" ]]; then
+        cp -r "$d" "$d.orig"
+    fi
+    sed -i'' "s/options.target_platform/'"android-$ANDROID_ARCH"'/g" "$d/lib/util/versioning.js"
+    sed -i'' "s/process.platform/'"android-$ANDROID_ARCH"'/g" "$d/lib/util/versioning.js"
+done

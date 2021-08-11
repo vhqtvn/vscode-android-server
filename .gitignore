@@ -3,3 +3,6 @@ libc++_shared.so
 node
 *.pyc
 .history
+rg
+current_building
+*.output
