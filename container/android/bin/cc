@@ -19,6 +19,6 @@ case $ANDROID_ARCH in
         ;;
 esac
 
-echo $NDK_BIN_ROOT/$TOOLARCH$ANDROID_BUILD_API_VERSION-clang -fPIC $(arg-hook $@) $(arg-fix $@)
+echo '$>' $NDK_BIN_ROOT/$TOOLARCH$ANDROID_BUILD_API_VERSION-clang -fPIC $(arg-hook $@) $(arg-fix $@)
 patch-hook -fPIC $@
 $NDK_BIN_ROOT/$TOOLARCH$ANDROID_BUILD_API_VERSION-clang -fPIC $(arg-hook $@) $(arg-fix $@)

@@ -3,6 +3,7 @@ libc++_shared.so
 node
 *.pyc
 .history
+.vscode
 rg
 current_building
 *.output

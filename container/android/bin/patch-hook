@@ -45,7 +45,15 @@ for a in sys.argv:
             'X11/extensions/XKBrules',
         ]:
             content = re.sub('[^\n\r]+'+sym+'[^\n\r]+','',content)
-        content = re.sub('XkbRF_VarDefsRec.*XCloseDisplay\(display\);','',content, flags=re.S)
+        #content = re.sub('XkbRF_VarDefsRec.*XCloseDisplay\(display\);','',content, flags=re.S)
+        content = re.sub(r'pthread_cancel(.*?)\)',r'pthread_kill\1,0)',content)
+        new_content = ""
+        remove_flag = False
+        for l in content.splitlines():
+            if "XkbRF_VarDefsRec" in l: remove_flag = True
+            if l == "}": remove_flag = False
+            if not remove_flag: new_content += l + "\n"
+            if "XCloseDisplay" in l: remove_flag = False
         with open(a,"w") as f:
-            f.write(content)
+            f.write(new_content)
             

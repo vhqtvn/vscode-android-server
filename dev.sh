@@ -66,7 +66,11 @@ main() {
             cat ./deps/v8/src/trap-handler/trap-handler.h.orig | sed 's/define V8_TRAP_HANDLER_SUPPORTED true/define V8_TRAP_HANDLER_SUPPORTED false/g' > ./deps/v8/src/trap-handler/trap-handler.h
           fi
           PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $NODE_CONFIGURE_NAME $ANDROID_BUILD_API_VERSION
-          PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
+          NODE_MAKE_CUSTOM_LDFLAGS=
+          if [[ "$ANDROID_ARCH" == "x86" ]]; then
+            NODE_MAKE_CUSTOM_LDFLAGS=-latomic
+          fi
+          LDFLAGS="$LDFLAGS $NODE_MAKE_CUSTOM_LDFLAGS" PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
           if [[ -f "deps/v8/src/api/api.cc.orig" ]]; then
             mv -f ./deps/v8/src/api/api.cc.orig ./deps/v8/src/api/api.cc
           fi
@@ -91,19 +95,33 @@ main() {
         done
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
+          yarn cache clean
+            sub_builder() {
+              find $1 -iname yarn.lock | grep -v node_modules | while IPS= read dir
+              do
+                echo "$dir"
+                pushd "$(dirname "$dir")"
+                set -x
+                  echo "* Work on $(pwd)"
+                  CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --frozen-lockfile --production=false
+                  [[ "$(jq ".scripts.build" package.json )" != "null" ]] && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn build
+                  [[ "$(jq ".scripts.release" package.json )" != "null" ]] && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release
+                  [[ "$(jq ".scripts[\"release:standalone\"]" package.json )" != "null" ]] && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release:standalone
+                  CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --frozen-lockfile --production
+                set +x
+                popd
+              done
+            }
             rm -rf release release-standalone node_modules
-            CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn
-            find . -iname yarn.lock | grep -v node_modules | while IPS= read -l dir
-            do
-              echo "$dir"
-              pushd "$(basename "$dir")"
-                CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn
-                [[ "$(jq ".scripts.build" code-server/package.json )" != "null" ]] && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn build
-                [[ "$(jq ".scripts.release" code-server/package.json )" != "null" ]] && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release
-                [[ "$(jq ".scripts[\"release:standalone\"]" code-server/package.json )" != "null" ]] && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release:standalone
-                CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --production --frozen-lockfile
-              popd
-            done
+            mv -f yarn.lock.origbk yarn.lock || true
+            CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --production=false --frozen-lockfile
+            mv -f yarn.lock yarn.lock.origbk || true
+            sub_builder .
+            mv -f yarn.lock.origbk yarn.lock || true
+            sub_builder lib
+            pushd lib/vscode
+                  CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --frozen-lockfile --production=false
+            popd
             CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn build
             CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn build:vscode
             CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release
@@ -118,8 +136,12 @@ main() {
         cp /opt/android-ndk/sources/cxx-stl/llvm-libc++/libs/$ARCH_NAME/libc++_shared.so ./libc++_shared.so
       	cat code-server/package.json | jq -r '.version' > code-server/VERSION
         ANDROID_ARCH=$ANDROID_ARCH TERMUX_ARCH=$TERMUX_ARCH bash ./scripts/download-rg.sh
-        cp rg/$ANDROID_ARCH/rg code-server/release-standalone/vendor/modules/code-oss-dev/node_modules/vscode-ripgrep/bin/rg
-        echo md5 code-server/release-standalone/lib/vscode/node_modules/vscode-ripgrep/bin/rg
+        find code-server/release-standalone -iname rg | while IPS= read p
+        do
+          echo "Replace rg in $p"
+          cp rg/$ANDROID_ARCH/rg $p
+          echo md5 $p
+        done
         if [[ "$(find code-server/release-standalone -iname '*.orig')" != "" ]]; then
           find code-server/release-standalone -iname '*.orig'
           exit -1

@@ -1,4 +1,9 @@
 FROM bitriseio/android-ndk:v2021_05_29-08_17-b2417
+
+ARG PYTHON_VERSION=3.6.15
+
+ENV PYTHON_VERSION=${PYTHON_VERSION}
+
 RUN DEBIAN_FRONTEND=noninteractive apt -y remove gcc gcc-5 g++ clang
 RUN DEBIAN_FRONTEND=noninteractive apt -y install \
     curl dirmngr apt-transport-https lsb-release ca-certificates
@@ -34,9 +39,16 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y update \
 
 RUN update-alternatives --remove-all gcc || true; update-alternatives --remove-all g++ || true
 
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test && add-apt-repository ppa:deadsnakes/ppa && \
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
     DEBIAN_FRONTEND=noninteractive apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install gcc-6 g++-6 gcc-6-multilib g++-6-multilib python3.6 -y
+    DEBIAN_FRONTEND=noninteractive apt-get install gcc-6 g++-6 gcc-6-multilib g++-6-multilib -y
+
+RUN mkdir -p /tmp/python-build && cd /tmp/python-build && \
+    DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y libbz2-dev && \
+    wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
+    tar -xf Python-*.tgz && cd Python-* && \
+    ./configure --enable-optimizations && \
+    make -j 4 && sudo make install
 
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 10 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 10 && \
@@ -44,13 +56,19 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 10 && \
     update-alternatives --set cc /usr/bin/gcc && \
     update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30 && \
     update-alternatives --set c++ /usr/bin/g++ && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1
+    update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python$(echo ${PYTHON_VERSION} | awk 'BEGIN{FS=OFS="."} NF--') 1
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install libc6-dev-i386
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN . ~/.cargo/env && rustup target add x86_64-linux-android i686-linux-android aarch64-linux-android armv7-linux-androideabi
 
 ENV NDK=/opt/android-ndk
 ENV NDK_BIN_ROOT=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin
 ENV ANDROID_ARCH=aarch64
 
+RUN git config --global --add safe.directory /vscode \
+    && git config --global --add safe.directory /vscode/code-server \
+    && git config --global --add safe.directory /vscode/code-server/lib/vscode \
+    && git config --global --add safe.directory /vscode/node-src
 
 ENTRYPOINT /bin/bash
