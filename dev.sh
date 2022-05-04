@@ -163,6 +163,7 @@ main() {
                 -v $(pwd)/node:/vscode-node \
                 -v $(pwd)/.git/modules/code-server:/.git/modules/code-server \
                 vsandroidenv:latest "$@"; exit $?
+        ;;
       *)
         docker run --rm -it \
                 -w /vscode \
