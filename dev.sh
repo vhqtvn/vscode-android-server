@@ -93,6 +93,7 @@ main() {
           echo -e '#!/bin/bash\n/vscode-build/bin/node-hook '$f'.orig "$@"' > $f
           chmod +x $f
         done
+        YARN="env CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
           yarn cache clean
@@ -134,7 +135,11 @@ main() {
         rm -rf cs-$ANDROID_ARCH.tgz libc++_shared.so node
         cp node-src/out/Release/node ./
         cp /opt/android-ndk/sources/cxx-stl/llvm-libc++/libs/$ARCH_NAME/libc++_shared.so ./libc++_shared.so
-      	cat code-server/package.json | jq -r '.version' > code-server/VERSION
+        VERSION_SUFFIX=
+        if [[ -f patch_version ]]; then
+          VERSION_SUFFIX="-p$(cat patch_version)"
+        fi
+      	echo "$(cat code-server/package.json | jq -r '.version')$VERSION_SUFFIX" | tr -d '\n' > code-server/VERSION
         ANDROID_ARCH=$ANDROID_ARCH TERMUX_ARCH=$TERMUX_ARCH bash ./scripts/download-rg.sh
         find code-server/release-standalone -iname rg | while IPS= read p
         do
@@ -148,6 +153,16 @@ main() {
         fi
         tar -czvf cs-$ANDROID_ARCH.tgz code-server/release-standalone code-server/VERSION node "libc++_shared.so"
         ;;
+      docker-run)
+        shift
+        docker run --rm -it \
+                -w /vscode \
+                -e ANDROID_BUILD_API_VERSION=24 \
+                -v $(pwd):/vscode \
+                -v $(pwd)/container/android:/vscode-build \
+                -v $(pwd)/node:/vscode-node \
+                -v $(pwd)/.git/modules/code-server:/.git/modules/code-server \
+                vsandroidenv:latest "$@"; exit $?
       *)
         docker run --rm -it \
                 -w /vscode \
