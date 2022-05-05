@@ -155,6 +155,7 @@ main() {
         ;;
       docker-run)
         shift
+        set -x
         docker run --rm \
                 -w /vscode \
                 -e ANDROID_BUILD_API_VERSION=24 \
@@ -162,7 +163,8 @@ main() {
                 -v $(pwd)/container/android:/vscode-build \
                 -v $(pwd)/node:/vscode-node \
                 -v $(pwd)/.git/modules/code-server:/.git/modules/code-server \
-                vsandroidenv:latest "$@"; exit $?
+                --entrypoint env \
+                vsandroidenv:latest OKOKOKRUN=1 "$@"; exit $?
         ;;
       *)
         docker run --rm -it \
