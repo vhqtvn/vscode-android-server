@@ -34,7 +34,7 @@ jobs:
       - name: Build docker
         run: ./dev.sh build-android-env
       - name: Create archive
-        run: ./dev.sh docker-run bash -c 'BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=${{ matrix.arch }} ./dev.sh release'
+        run: ./dev.sh docker-run bash -c './dev.sh apply-patch && BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=${{ matrix.arch }} ./dev.sh release'
       - name: Store artifacts
         uses: actions/upload-artifact@v2
         with:
