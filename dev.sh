@@ -155,7 +155,7 @@ main() {
         ;;
       docker-run)
         shift
-        docker run --rm -it \
+        docker run --rm \
                 -w /vscode \
                 -e ANDROID_BUILD_API_VERSION=24 \
                 -v $(pwd):/vscode \
