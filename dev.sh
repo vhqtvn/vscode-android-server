@@ -69,8 +69,10 @@ main() {
       	set -e
         if [ ! -z "$BUILD_NODE" ]; then
           pushd node-src
-          rm -rf out
           $USERRUN make clean
+          git clean -dfX
+          git checkout -f HEAD
+          git apply ../node-src.vh.patch
           if [[ "$ANDROID_ARCH" == "x86_64" ]]; then
             $USERRUN git checkout HEAD -- ./deps/v8/src/trap-handler/trap-handler.h
             $USERRUN mv ./deps/v8/src/trap-handler/trap-handler.h ./deps/v8/src/trap-handler/trap-handler.h.orig
@@ -94,16 +96,18 @@ main() {
             mv $f "$f.orig"
           fi
           echo -e '#!/bin/bash\n/vscode-build/bin/node-gyp-hook $0 $@\n'$f'.orig --nodedir /vscode/node-src/ "$@"' > $f
-          chmod +x $f
+          chmod 0747 $f
+          chmod 0747 "$f.orig"
         done
         for f in /usr/bin/node; do
           if [ ! -f "$f.orig" ]; then
             mv $f "$f.orig"
           fi
           echo -e '#!/bin/bash\n/vscode-build/bin/node-hook '$f'.orig "$@"' > $f
-          chmod +x $f
+          chmod 0747 $f
+          chmod 0747 "$f.orig"
         done
-        YARN="$USERRUN env CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
+        YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
           yarn cache clean
@@ -125,6 +129,8 @@ main() {
               done
             }
             rm -rf release release-standalone node_modules
+            export NODE_PATH=/usr/lib/node_modules
+            yarn global add @mapbox/node-pre-gyp node-addon-api
             $USERRUN mv -f yarn.lock.origbk yarn.lock || true
             $YARN --production=false --frozen-lockfile
             $USERRUN mv -f yarn.lock yarn.lock.origbk || true
@@ -151,7 +157,7 @@ main() {
           VERSION_SUFFIX="-p$(cat patch_version)"
         fi
       	echo "$(cat code-server/package.json | jq -r '.version')$VERSION_SUFFIX" | tr -d '\n' | $USERRUN tee code-server/VERSION
-        $USERRUN env ANDROID_ARCH=$ANDROID_ARCH TERMUX_ARCH=$TERMUX_ARCH bash ./scripts/download-rg.sh
+        $USERRUN ANDROID_ARCH=$ANDROID_ARCH TERMUX_ARCH=$TERMUX_ARCH bash ./scripts/download-rg.sh
         find code-server/release-standalone -iname rg | while IPS= read p
         do
           echo "Replace rg in $p"
@@ -163,6 +169,7 @@ main() {
           exit -1
         fi
         $USERRUN tar -czvf cs-$ANDROID_ARCH.tgz code-server/release-standalone code-server/VERSION node "libc++_shared.so"
+        find code-server/release-standalone/ -iname '*.node' | grep -v prebui | xargs file
         ;;
       docker-run)
         shift
