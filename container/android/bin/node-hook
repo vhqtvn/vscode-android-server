@@ -36,6 +36,6 @@ else
     :
 fi
 
-echo "> Node run: (cwd: $(pwd)) " $NODE_BIN "${INJECT_ARGS[@]}" "${@}" >> /tmp/log
+# echo "> Node run: (cwd: $(pwd)) " $NODE_BIN "${INJECT_ARGS[@]}" "${@}" >> /tmp/log
 
 LD_PRELOAD=/vscode-build/lib/node-preload.so "$NODE_BIN" "${INJECT_ARGS[@]}" "$@"

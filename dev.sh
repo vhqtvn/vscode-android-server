@@ -24,8 +24,22 @@ main() {
         docker build ./container/android -t vsandroidenv:latest
         ;;
       release)
+        if [ "$EUID" -ne 0 ]; then
+          USERRUN=
+        else
+          BUILDING_USER=$(ls -n /vscode/dev.sh | awk '{print $3}')
+          BUILDING_GROUP=$(ls -n /vscode/dev.sh | awk '{print $4}')
+          if ! grep -q code-builder /etc/passwd; then
+            groupadd -g $BUILDING_GROUP builder-gr
+            useradd -m -g $BUILDING_GROUP -u $BUILDING_USER -N code-builder 
+          fi
+          USERRUN="sudo -E -H -u #$BUILDING_USER"
+        fi
+        set -x
+
         echo $ANDROID_ARCH > current_building
         gcc -shared -fPIC /vscode-build/lib/node-preload.c -o /vscode-build/lib/node-preload.so -ldl 
+        chmod 0744 /vscode-build/lib/node-preload.so
         case $ANDROID_ARCH in
           arm|armeabi-v7a)
             ARCH_NAME="armeabi-v7a"
@@ -54,30 +68,26 @@ main() {
         esac
       	set -e
         if [ ! -z "$BUILD_NODE" ]; then
-          cd node-src
+          pushd node-src
           rm -rf out
-          make clean
+          $USERRUN make clean
           if [[ "$ANDROID_ARCH" == "x86_64" ]]; then
-            git checkout HEAD -- ./deps/v8/src/api/api.cc
-            mv ./deps/v8/src/api/api.cc ./deps/v8/src/api/api.cc.orig
-            cat ./deps/v8/src/api/api.cc.orig | sed 's/#if V8_TARGET_ARCH_X64 && !V8_OS_ANDROID/#if true\nreturn false;\n#elif false/g' > ./deps/v8/src/api/api.cc
-            git checkout HEAD -- ./deps/v8/src/trap-handler/trap-handler.h
-            mv ./deps/v8/src/trap-handler/trap-handler.h ./deps/v8/src/trap-handler/trap-handler.h.orig
-            cat ./deps/v8/src/trap-handler/trap-handler.h.orig | sed 's/define V8_TRAP_HANDLER_SUPPORTED true/define V8_TRAP_HANDLER_SUPPORTED false/g' > ./deps/v8/src/trap-handler/trap-handler.h
+            $USERRUN git checkout HEAD -- ./deps/v8/src/trap-handler/trap-handler.h
+            $USERRUN mv ./deps/v8/src/trap-handler/trap-handler.h ./deps/v8/src/trap-handler/trap-handler.h.orig
+            cat ./deps/v8/src/trap-handler/trap-handler.h.orig | sed 's/define V8_TRAP_HANDLER_SUPPORTED true/define V8_TRAP_HANDLER_SUPPORTED false/g' | $USERRUN tee ./deps/v8/src/trap-handler/trap-handler.h
           fi
-          PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $NODE_CONFIGURE_NAME $ANDROID_BUILD_API_VERSION
+          $USERRUN PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $NODE_CONFIGURE_NAME $ANDROID_BUILD_API_VERSION
           NODE_MAKE_CUSTOM_LDFLAGS=
           if [[ "$ANDROID_ARCH" == "x86" ]]; then
             NODE_MAKE_CUSTOM_LDFLAGS=-latomic
           fi
           LDFLAGS="$LDFLAGS $NODE_MAKE_CUSTOM_LDFLAGS" PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
-          if [[ -f "deps/v8/src/api/api.cc.orig" ]]; then
-            mv -f ./deps/v8/src/api/api.cc.orig ./deps/v8/src/api/api.cc
-          fi
           if [[ -f "deps/v8/src/trap-handler/trap-handler.h.orig" ]]; then
-            mv -f ./deps/v8/src/trap-handler/trap-handler.h.orig ./deps/v8/src/trap-handler/trap-handler.h
+            $USERRUN mv -f ./deps/v8/src/trap-handler/trap-handler.h.orig ./deps/v8/src/trap-handler/trap-handler.h
           fi
-          cd ..
+          $USERRUN mkdir -p include/node
+          $USERRUN cp config.gypi include/node/config.gypi
+          popd
         fi
         for f in /usr/lib/node_modules/npm/bin/node-gyp-bin/node-gyp; do
           if [ ! -f "$f.orig" ]; then
@@ -93,10 +103,11 @@ main() {
           echo -e '#!/bin/bash\n/vscode-build/bin/node-hook '$f'.orig "$@"' > $f
           chmod +x $f
         done
-        YARN="env CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
+        YARN="$USERRUN env CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
           yarn cache clean
+          $USERRUN yarn cache clean
             sub_builder() {
               find $1 -iname yarn.lock | grep -v node_modules | while IPS= read dir
               do
@@ -104,32 +115,32 @@ main() {
                 pushd "$(dirname "$dir")"
                 set -x
                   echo "* Work on $(pwd)"
-                  CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --frozen-lockfile --production=false
-                  [[ "$(jq ".scripts.build" package.json )" != "null" ]] && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn build
-                  [[ "$(jq ".scripts.release" package.json )" != "null" ]] && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release
-                  [[ "$(jq ".scripts[\"release:standalone\"]" package.json )" != "null" ]] && CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release:standalone
-                  CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --frozen-lockfile --production
+                  $YARN --frozen-lockfile --production=false
+                  [[ "$(jq ".scripts.build" package.json )" != "null" ]] && $YARN build
+                  [[ "$(jq ".scripts.release" package.json )" != "null" ]] && $YARN release
+                  [[ "$(jq ".scripts[\"release:standalone\"]" package.json )" != "null" ]] && $YARN release:standalone
+                  $YARN --frozen-lockfile --production
                 set +x
                 popd
               done
             }
             rm -rf release release-standalone node_modules
-            mv -f yarn.lock.origbk yarn.lock || true
-            CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --production=false --frozen-lockfile
-            mv -f yarn.lock yarn.lock.origbk || true
+            $USERRUN mv -f yarn.lock.origbk yarn.lock || true
+            $YARN --production=false --frozen-lockfile
+            $USERRUN mv -f yarn.lock yarn.lock.origbk || true
             sub_builder .
-            mv -f yarn.lock.origbk yarn.lock || true
+            $USERRUN mv -f yarn.lock.origbk yarn.lock || true
             sub_builder lib
             pushd lib/vscode
-                  CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --frozen-lockfile --production=false
+                  $YARN --frozen-lockfile --production=false
             popd
-            CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn build
-            CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn build:vscode
-            CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release
+            $YARN build
+            $YARN build:vscode
+            $YARN release
             #nonexisten proxy to disable downloading
-            CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn release:standalone
+            $YARN release:standalone
             cd release-standalone
-            CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn --production --frozen-lockfile
+            $YARN --production --frozen-lockfile
           popd
         fi
         rm -rf cs-$ANDROID_ARCH.tgz libc++_shared.so node
@@ -139,19 +150,19 @@ main() {
         if [[ -f patch_version ]]; then
           VERSION_SUFFIX="-p$(cat patch_version)"
         fi
-      	echo "$(cat code-server/package.json | jq -r '.version')$VERSION_SUFFIX" | tr -d '\n' > code-server/VERSION
-        ANDROID_ARCH=$ANDROID_ARCH TERMUX_ARCH=$TERMUX_ARCH bash ./scripts/download-rg.sh
+      	echo "$(cat code-server/package.json | jq -r '.version')$VERSION_SUFFIX" | tr -d '\n' | $USERRUN tee code-server/VERSION
+        $USERRUN env ANDROID_ARCH=$ANDROID_ARCH TERMUX_ARCH=$TERMUX_ARCH bash ./scripts/download-rg.sh
         find code-server/release-standalone -iname rg | while IPS= read p
         do
           echo "Replace rg in $p"
-          cp rg/$ANDROID_ARCH/rg $p
+          $USERRUN cp rg/$ANDROID_ARCH/rg $p
           echo md5 $p
         done
         if [[ "$(find code-server/release-standalone -iname '*.orig')" != "" ]]; then
           find code-server/release-standalone -iname '*.orig'
           exit -1
         fi
-        tar -czvf cs-$ANDROID_ARCH.tgz code-server/release-standalone code-server/VERSION node "libc++_shared.so"
+        $USERRUN tar -czvf cs-$ANDROID_ARCH.tgz code-server/release-standalone code-server/VERSION node "libc++_shared.so"
         ;;
       docker-run)
         shift

@@ -9,7 +9,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt -y install \
     curl dirmngr apt-transport-https lsb-release ca-certificates
 
 # Installs node.
-RUN curl -sSL https://deb.nodesource.com/setup_14.x | bash - && \
+RUN curl -sSL https://deb.nodesource.com/setup_16.x | bash - && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
 
 # Installs yarn.
@@ -41,7 +41,7 @@ RUN update-alternatives --remove-all gcc || true; update-alternatives --remove-a
 
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
     DEBIAN_FRONTEND=noninteractive apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install gcc-6 g++-6 gcc-6-multilib g++-6-multilib -y
+    DEBIAN_FRONTEND=noninteractive apt-get install gcc-9 g++-9 gcc-9-multilib g++-9-multilib -y
 
 RUN mkdir -p /tmp/python-build && cd /tmp/python-build && \
     DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y libbz2-dev && \
@@ -50,8 +50,8 @@ RUN mkdir -p /tmp/python-build && cd /tmp/python-build && \
     ./configure --enable-optimizations && \
     make -j 4 && sudo make install
 
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 10 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 10 && \
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 10 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 10 && \
     update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30 && \
     update-alternatives --set cc /usr/bin/gcc && \
     update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30 && \
