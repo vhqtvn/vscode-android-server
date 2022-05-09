@@ -1,3 +1,21 @@
-#!/bin/bash
+#!/usr/bin/python
 
-echo "called " $@
+import sys, os, re
+
+cwd = os.getcwd()
+
+if cwd.endswith('/@parcel/watcher'):
+    with open("binding.gyp", "r") as f:
+        content = f.read()
+    if 'OS=="linux"' in content:
+        content = content.replace('OS=="linux"','OS==OS')
+        content = content.replace('WATCHMAN','DISABLEDWATCHMAN')
+        with open("binding.gyp", "w") as f:
+            f.write(content)
+elif cwd.endswith('/@parcel/watcher'):
+    with open("binding.gyp", "r") as f:
+        content = f.read()
+    if 'OS=="linux"' in content:
+        content = content.replace('OS=="linux"','OS==OS')
+        with open("binding.gyp", "w") as f:
+            f.write(content)

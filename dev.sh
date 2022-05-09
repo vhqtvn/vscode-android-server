@@ -110,8 +110,8 @@ main() {
         YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
-          yarn cache clean
-          $USERRUN yarn cache clean
+            yarn cache clean
+            $USERRUN yarn cache clean
             sub_builder() {
               find $1 -iname yarn.lock | grep -v node_modules | while IPS= read dir
               do
@@ -130,7 +130,7 @@ main() {
             }
             rm -rf release release-standalone node_modules
             export NODE_PATH=/usr/lib/node_modules
-            yarn global add @mapbox/node-pre-gyp node-addon-api
+            npm install -g @mapbox/node-pre-gyp node-addon-api
             $USERRUN mv -f yarn.lock.origbk yarn.lock || true
             $YARN --production=false --frozen-lockfile
             $USERRUN mv -f yarn.lock yarn.lock.origbk || true
