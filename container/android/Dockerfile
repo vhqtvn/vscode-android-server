@@ -5,7 +5,8 @@ ARG PYTHON_VERSION=3.6.15
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 
 RUN DEBIAN_FRONTEND=noninteractive apt -y remove gcc gcc-5 g++ clang
-RUN DEBIAN_FRONTEND=noninteractive apt -y install \
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y update \
+ && DEBIAN_FRONTEND=noninteractive apt -y install \
     curl dirmngr apt-transport-https lsb-release ca-certificates
 
 # Installs node.
@@ -18,10 +19,12 @@ RUN curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
     DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y yarn
 
 # Installs envsubst.
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y gettext-base
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y gettext-base
 
 # Misc build dependencies.
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y git rsync
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y git rsync
 
 # We need latest jq from debian buster for date support.
 RUN ARCH="$(dpkg --print-architecture)" && \
@@ -58,13 +61,17 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 10 && \
     update-alternatives --set c++ /usr/bin/g++ && \
     update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python$(echo ${PYTHON_VERSION} | awk 'BEGIN{FS=OFS="."} NF--') 1
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install libc6-dev-i386
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y update \
+ && DEBIAN_FRONTEND=noninteractive apt-get -y install libc6-dev-i386
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN . ~/.cargo/env && rustup target add x86_64-linux-android i686-linux-android aarch64-linux-android armv7-linux-androideabi
 
 ENV NDK=/opt/android-ndk
 ENV NDK_BIN_ROOT=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin
 ENV ANDROID_ARCH=aarch64
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y update \
+ && DEBIAN_FRONTEND=noninteractive apt-get -y install quilt
 
 RUN git config --global --add safe.directory /vscode \
     && git config --global --add safe.directory /vscode/code-server \

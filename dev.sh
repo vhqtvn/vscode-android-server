@@ -110,6 +110,7 @@ main() {
         YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
+            quilt push -a
             yarn cache clean
             $USERRUN yarn cache clean
             sub_builder() {
