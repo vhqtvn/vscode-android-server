@@ -1,0 +1,152 @@
+diff --git a/android-configure b/android-configure
+index 43341d1abe..11a916cb76 100755
+--- a/android-configure
++++ b/android-configure
+@@ -26,7 +26,7 @@ CC_VER="4.9"
+ case $ARCH in
+     arm)
+         DEST_CPU="arm"
+-        TOOLCHAIN_NAME="armv7-linux-androideabi"
++        TOOLCHAIN_NAME="armv7a-linux-androideabi"
+         ;;
+     x86)
+         DEST_CPU="ia32"
+@@ -56,10 +56,10 @@ export CXX_host=$(command -v g++)
+ host_gcc_version=$($CC_host --version | grep gcc | awk '{print $NF}')
+ major=$(echo $host_gcc_version | awk -F . '{print $1}')
+ minor=$(echo $host_gcc_version | awk -F . '{print $2}')
+-if [ -z $major ] || [ -z $minor ] || [ $major -lt 6 ] || ( [ $major -eq 6 ] && [ $minor -lt 3 ] ); then
+-  echo "host gcc $host_gcc_version is too old, need gcc 6.3.0"
+-  return 1
+-fi
++#if [ -z $major ] || [ -z $minor ] || [ $major -lt 6 ] || ( [ $major -eq 6 ] && [ $minor -lt 3 ] ); then
++#  echo "host gcc $host_gcc_version is too old, need gcc 6.3.0"
++#  return 1
++#fi
+ 
+ SUFFIX="$TOOLCHAIN_NAME$ANDROID_SDK_VERSION"
+ TOOLCHAIN=$NDK_PATH/toolchains/llvm/prebuilt/$HOST_OS-$HOST_ARCH
+@@ -70,7 +70,7 @@ export CXX=$TOOLCHAIN/bin/$SUFFIX-clang++
+ 
+ 
+ GYP_DEFINES="target_arch=$ARCH"
+-GYP_DEFINES+=" v8_target_arch=$ARCH"
++GYP_DEFINES+=" v8_target_arch=$DEST_CPU"
+ GYP_DEFINES+=" android_target_arch=$ARCH"
+ GYP_DEFINES+=" host_os=$HOST_OS OS=android"
+ export GYP_DEFINES
+diff --git a/deps/histogram/histogram.gyp b/deps/histogram/histogram.gyp
+index e3f5fd7a46..60609ce7ad 100644
+--- a/deps/histogram/histogram.gyp
++++ b/deps/histogram/histogram.gyp
+@@ -11,6 +11,11 @@
+       'direct_dependent_settings': {
+         'include_dirs': [ 'src' ]
+       },
++      'conditions': [
++         ['OS == "android" and target_arch == "x86"', {
++           'libraries': ['-latomic'],
++         }],
++      ],
+       'sources': [
+         'src/hdr_histogram.c',
+       ]
+diff --git a/deps/npm/node_modules/cacache/lib/util/move-file.js b/deps/npm/node_modules/cacache/lib/util/move-file.js
+index b43744b3da..9dd5bcbd14 100644
+--- a/deps/npm/node_modules/cacache/lib/util/move-file.js
++++ b/deps/npm/node_modules/cacache/lib/util/move-file.js
+@@ -4,6 +4,7 @@ const fs = require('graceful-fs')
+ const BB = require('bluebird')
+ const chmod = BB.promisify(fs.chmod)
+ const unlink = BB.promisify(fs.unlink)
++const access = BB.promisify(fs.access)
+ let move
+ let pinflight
+ 
+@@ -18,6 +19,17 @@ function moveFile (src, dest) {
+   // content their own way.
+   //
+   // Note that, as the name suggests, this strictly only supports file moves.
++
++  // Calling link() on android is not allowed, we get a SELinux security exception
++  if(process.platform === 'android') {
++    return access(dest, fs.constants.F_OK)
++      .catch(err => {
++        if (!move) { move = require('move-concurrently') }
++        return move(src, dest, { BB, fs })
++          .then(() => chmod(dest, '0444'))
++      })
++  }
++
+   return BB.fromNode(cb => {
+     fs.link(src, dest, err => {
+       if (err) {
+diff --git a/deps/uv/uv.gyp b/deps/uv/uv.gyp
+index 47de0d7ede..6bf91f4504 100644
+--- a/deps/uv/uv.gyp
++++ b/deps/uv/uv.gyp
+@@ -40,7 +40,7 @@
+     {
+       'target_name': 'libuv',
+       'type': '<(uv_library)',
+-      'include_dirs': [
++      'include_dirs+': [
+         'include',
+         'src/',
+       ],
+@@ -55,7 +55,7 @@
+           '<@(shared_unix_defines)',
+           '<@(shared_zos_defines)',
+         ],
+-        'include_dirs': [ 'include' ],
++        'include_dirs+': [ 'include' ],
+         'conditions': [
+           ['OS == "linux"', {
+             'defines': [ '_POSIX_C_SOURCE=200112' ],
+@@ -254,6 +254,7 @@
+         }],
+         [ 'OS=="android"', {
+           'sources': [
++            'src/unix/epoll.c',
+             'src/unix/linux-core.c',
+             'src/unix/linux-inotify.c',
+             'src/unix/linux-syscalls.c',
+diff --git a/lib/os.js b/lib/os.js
+index f0f0fdb15f..c6463b78e3 100644
+--- a/lib/os.js
++++ b/lib/os.js
+@@ -183,7 +183,7 @@ function tmpdir() {
+     path = safeGetenv('TMPDIR') ||
+            safeGetenv('TMP') ||
+            safeGetenv('TEMP') ||
+-           '/tmp';
++           '/data/local/tmp/tmp';
+     if (path.length > 1 && StringPrototypeEndsWith(path, '/'))
+       path = StringPrototypeSlice(path, 0, -1);
+   }
+diff --git a/node.gyp b/node.gyp
+index 63f60a924b..faacda3170 100644
+--- a/node.gyp
++++ b/node.gyp
+@@ -116,7 +116,7 @@
+           '-Wl,-bnoerrmsg',
+         ],
+       }],
+-      ['OS == "linux" and llvm_version != "0.0"', {
++      ['OS == "android" and target_arch == "x86"', {
+         'libraries': ['-latomic'],
+       }],
+     ],
+diff --git a/tools/v8_gypfiles/v8.gyp b/tools/v8_gypfiles/v8.gyp
+index 48ec392b6f..7cc95568eb 100644
+--- a/tools/v8_gypfiles/v8.gyp
++++ b/tools/v8_gypfiles/v8.gyp
+@@ -903,7 +903,7 @@
+         }],
+         # Platforms that don't have Compare-And-Swap (CAS) support need to link atomic library
+         # to implement atomic memory access
+-        ['v8_current_cpu in ["mips", "mipsel", "mips64", "mips64el", "ppc", "arm"]', {
++        ['v8_current_cpu in ["mips", "mipsel", "mips64", "mips64el", "ppc", "arm", "x86"]', {
+           'link_settings': {
+             'libraries': ['-latomic', ],
+           },
