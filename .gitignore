@@ -7,3 +7,4 @@ node
 rg
 current_building
 *.output
+.pc

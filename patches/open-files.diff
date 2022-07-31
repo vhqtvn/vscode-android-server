@@ -1,0 +1,51 @@
+Support openning multiple files
+
+Index: code-server/lib/vscode/src/vs/workbench/services/environment/browser/environmentService.ts
+===================================================================
+--- old/code-server/lib/vscode/src/vs/workbench/services/environment/browser/environmentService.ts
++++ new/code-server/lib/vscode/src/vs/workbench/services/environment/browser/environmentService.ts
+@@ -313,6 +313,7 @@
+ 	@memoize
+ 	get filesToOpenOrCreate(): IPath[] | undefined {
+ 		if (this.payload) {
++			const result: IPath[] = []
+ 			const fileToOpen = this.payload.get('openFile');
+ 			if (fileToOpen) {
+ 				const fileUri = URI.parse(fileToOpen);
+@@ -321,14 +322,33 @@
+ 				if (this.payload.has('gotoLineMode')) {
+ 					const pathColumnAware = parseLineAndColumnAware(fileUri.path);
+ 
+-					return [{
++					result.push({
+ 						fileUri: fileUri.with({ path: pathColumnAware.path }),
+ 						selection: !isUndefined(pathColumnAware.line) ? { startLineNumber: pathColumnAware.line, startColumn: pathColumnAware.column || 1 } : undefined
+-					}];
++					});
++				} else {
++					result.push({ fileUri });
+ 				}
++			}
++			const filesToOpen = this.payload.get('openFiles') as any as string[];
++			if (filesToOpen) {
++				for (const fileToOpen of filesToOpen) {
++					const fileUri = URI.parse(fileToOpen);
++
++					// Support: --goto parameter to open on line/col
++					if (this.payload.has('gotoLineMode')) {
++						const pathColumnAware = parseLineAndColumnAware(fileUri.path);
+ 
+-				return [{ fileUri }];
++						result.push({
++							fileUri: fileUri.with({ path: pathColumnAware.path }),
++							selection: !isUndefined(pathColumnAware.line) ? { startLineNumber: pathColumnAware.line, startColumn: pathColumnAware.column || 1 } : undefined
++						});
++					} else {
++						result.push({ fileUri });
++					}
++				}
+ 			}
++			return result;
+ 		}
+ 
+ 		return undefined;

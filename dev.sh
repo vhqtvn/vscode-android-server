@@ -19,6 +19,7 @@ main() {
         if [[ -f ./node-src.vh.patch ]]; then
           cd node-src && git apply ../node-src.vh.patch
         fi
+        quilt push -a
         ;;
       build-android-env)
         docker build ./container/android -t vsandroidenv:latest
