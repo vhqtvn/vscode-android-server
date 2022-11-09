@@ -148,7 +148,7 @@ main() {
             #nonexisten proxy to disable downloading
             $YARN release:standalone
             cd release-standalone
-            $YARN --production --frozen-lockfile
+            $YARN --production --frozen-lockfile --force
           popd
         fi
         rm -rf cs-$ANDROID_ARCH.tgz libc++_shared.so node
