@@ -1,34 +1,16 @@
-diff --git a/android-configure b/android-configure
-index 43341d1abe..1742d6ea4a 100755
---- a/android-configure
-+++ b/android-configure
-@@ -26,7 +26,7 @@ CC_VER="4.9"
- case $ARCH in
-     arm)
-         DEST_CPU="arm"
--        TOOLCHAIN_NAME="armv7-linux-androideabi"
-+        TOOLCHAIN_NAME="armv7a-linux-androideabi"
-         ;;
-     x86)
-         DEST_CPU="ia32"
-@@ -53,7 +53,7 @@ HOST_ARCH="x86_64"
- export CC_host=$(command -v gcc)
- export CXX_host=$(command -v g++)
+diff --git a/configure.py b/configure.py
+index d3192ca04c..561c55f798 100755
+--- a/configure.py
++++ b/configure.py
+@@ -1242,7 +1242,7 @@ def configure_node(o):
+   o['variables']['want_separate_host_toolset'] = int(cross_compiling)
  
--host_gcc_version=$($CC_host --version | grep gcc | awk '{print $NF}')
-+host_gcc_version=$($CC_host --version | grep gcc | sed 's/ 20[0-9]\{6\}//g' | awk '{print $NF}')
- major=$(echo $host_gcc_version | awk -F . '{print $1}')
- minor=$(echo $host_gcc_version | awk -F . '{print $2}')
- if [ -z $major ] || [ -z $minor ] || [ $major -lt 6 ] || ( [ $major -eq 6 ] && [ $minor -lt 3 ] ); then
-@@ -70,7 +70,7 @@ export CXX=$TOOLCHAIN/bin/$SUFFIX-clang++
+   # Enable branch protection for arm64
+-  if target_arch == 'arm64':
++  if target_arch == 'arm64-disablezz':
+     o['cflags']+=['-msign-return-address=all']
  
- 
- GYP_DEFINES="target_arch=$ARCH"
--GYP_DEFINES+=" v8_target_arch=$ARCH"
-+GYP_DEFINES+=" v8_target_arch=$DEST_CPU"
- GYP_DEFINES+=" android_target_arch=$ARCH"
- GYP_DEFINES+=" host_os=$HOST_OS OS=android"
- export GYP_DEFINES
+   if options.node_snapshot_main is not None:
 diff --git a/deps/uv/src/unix/core.c b/deps/uv/src/unix/core.c
 index 71e9c525c4..9f4666eae3 100644
 --- a/deps/uv/src/unix/core.c
@@ -43,65 +25,58 @@ index 71e9c525c4..9f4666eae3 100644
      buf = "/tmp";
    #endif
 diff --git a/deps/uv/src/unix/fs.c b/deps/uv/src/unix/fs.c
-index 362c36c6a0..80f15e7613 100644
+index 362c36c6a0..575672d5e3 100644
 --- a/deps/uv/src/unix/fs.c
 +++ b/deps/uv/src/unix/fs.c
-@@ -1339,6 +1339,7 @@ static ssize_t uv__fs_copyfile(uv_fs_t* req) {
+@@ -1339,7 +1339,7 @@ static ssize_t uv__fs_copyfile(uv_fs_t* req) {
  #endif  /* !__linux__ */
    }
  
-+#ifndef __ANDROID__
- #ifdef FICLONE
+-#ifdef FICLONE
++#ifdef FICLONE_DISABLEDZZZ
    if (req->flags & UV_FS_COPYFILE_FICLONE ||
        req->flags & UV_FS_COPYFILE_FICLONE_FORCE) {
-@@ -1358,6 +1359,7 @@ static ssize_t uv__fs_copyfile(uv_fs_t* req) {
-     err = UV_ENOSYS;
-     goto out;
-   }
-+#endif
- #endif
- 
-   bytes_to_send = src_statsbuf.st_size;
+     if (ioctl(dstfd, FICLONE, srcfd) == 0) {
 diff --git a/deps/uv/src/unix/process.c b/deps/uv/src/unix/process.c
-index 91bf3c5070..6096d3d239 100644
+index 91bf3c5070..0efe955336 100644
 --- a/deps/uv/src/unix/process.c
 +++ b/deps/uv/src/unix/process.c
-@@ -303,6 +303,7 @@ static void uv__process_child_init(const uv_process_options_t* options,
+@@ -302,7 +302,7 @@ static void uv__process_child_init(const uv_process_options_t* options,
+ 
    if (options->cwd != NULL && chdir(options->cwd))
      uv__write_errno(error_fd);
- 
-+  #ifndef __ANDROID__
+-
++#if ZZZDISABLE
    if (options->flags & (UV_PROCESS_SETUID | UV_PROCESS_SETGID)) {
      /* When dropping privileges from root, the `setgroups` call will
       * remove any extraneous groups. If we don't call this, then
-@@ -319,6 +320,7 @@ static void uv__process_child_init(const uv_process_options_t* options,
+@@ -319,7 +319,7 @@ static void uv__process_child_init(const uv_process_options_t* options,
  
    if ((options->flags & UV_PROCESS_SETUID) && setuid(options->uid))
      uv__write_errno(error_fd);
-+  #endif
- 
+-
++#endif
    if (options->env != NULL) {
      environ = options->env;
+   }
 diff --git a/deps/uv/src/unix/sysinfo-memory.c b/deps/uv/src/unix/sysinfo-memory.c
-index 23b4fc6e91..bd9df73607 100644
+index 23b4fc6e91..b09b8fbe09 100644
 --- a/deps/uv/src/unix/sysinfo-memory.c
 +++ b/deps/uv/src/unix/sysinfo-memory.c
-@@ -25,6 +25,7 @@
- #include <stdint.h>
+@@ -26,10 +26,10 @@
  #include <sys/sysinfo.h>
  
-+#ifndef __ANDROID__
  uint64_t uv_get_free_memory(void) {
-   struct sysinfo info;
+-  struct sysinfo info;
++//  struct sysinfo info;
  
-@@ -32,6 +33,7 @@ uint64_t uv_get_free_memory(void) {
-     return (uint64_t) info.freeram * info.mem_unit;
+-  if (sysinfo(&info) == 0)
+-    return (uint64_t) info.freeram * info.mem_unit;
++//  if (sysinfo(&info) == 0)
++//    return (uint64_t) info.freeram * info.mem_unit;
    return 0;
  }
-+#endif
  
- uint64_t uv_get_total_memory(void) {
-   struct sysinfo info;
 diff --git a/deps/uv/uv.gyp b/deps/uv/uv.gyp
 index 093f611fb6..d0885429fa 100644
 --- a/deps/uv/uv.gyp
@@ -133,10 +108,10 @@ index 093f611fb6..d0885429fa 100644
            'link_settings': {
              'libraries': [ '-ldl', '-lrt' ],
 diff --git a/deps/v8/src/flags/flag-definitions.h b/deps/v8/src/flags/flag-definitions.h
-index 5daf17566f..01d8c6fbca 100644
+index d8e1dd6b9c..c58652c118 100644
 --- a/deps/v8/src/flags/flag-definitions.h
 +++ b/deps/v8/src/flags/flag-definitions.h
-@@ -1980,7 +1980,7 @@ DEFINE_PERF_PROF_IMPLICATION(perf_prof, perf_prof_unwinding_info)
+@@ -1971,7 +1971,7 @@ DEFINE_PERF_PROF_IMPLICATION(perf_prof, perf_prof_unwinding_info)
  #undef DEFINE_PERF_PROF_BOOL
  #undef DEFINE_PERF_PROF_IMPLICATION
  
@@ -145,24 +120,11 @@ index 5daf17566f..01d8c6fbca 100644
                "Specify the name of the file for fake gc mmap used in ll_prof")
  DEFINE_BOOL(log_internal_timer_events, false, "Time internal events.")
  DEFINE_IMPLICATION(log_internal_timer_events, prof)
-diff --git a/deps/v8/src/logging/log.cc b/deps/v8/src/logging/log.cc
-index 4f6aa856d7..967ecf27df 100644
---- a/deps/v8/src/logging/log.cc
-+++ b/deps/v8/src/logging/log.cc
-@@ -308,7 +308,7 @@ class PerfBasicLogger : public CodeEventLogger {
-   FILE* perf_output_handle_;
- };
- 
--const char PerfBasicLogger::kFilenameFormatString[] = "/tmp/perf-%d.map";
-+const char PerfBasicLogger::kFilenameFormatString[] = "/data/data/vn.vhn.vsc/files/tmp/perf-%d.map";
- // Extra space for the PID in the filename
- const int PerfBasicLogger::kFilenameBufferPadding = 16;
- 
 diff --git a/deps/v8/src/trap-handler/trap-handler.h b/deps/v8/src/trap-handler/trap-handler.h
-index 0b3a6e0a70..b890620a0a 100644
+index 0b3a6e0a70..fc6ede2c18 100644
 --- a/deps/v8/src/trap-handler/trap-handler.h
 +++ b/deps/v8/src/trap-handler/trap-handler.h
-@@ -18,21 +18,21 @@ namespace internal {
+@@ -18,21 +18,7 @@ namespace internal {
  namespace trap_handler {
  
  // X64 on Linux, Windows, MacOS, FreeBSD.
@@ -179,43 +141,32 @@ index 0b3a6e0a70..b890620a0a 100644
 -#define V8_TRAP_HANDLER_SUPPORTED true
 -// Everything else is unsupported.
 -#else
-+// #if V8_HOST_ARCH_X64 && V8_TARGET_ARCH_X64 &&                        \
-+//     ((V8_OS_LINUX && !V8_OS_ANDROID) || V8_OS_WIN || V8_OS_MACOSX || \
-+//      V8_OS_FREEBSD)
-+// #define V8_TRAP_HANDLER_SUPPORTED true
-+// // Arm64 (non-simulator) on Mac.
-+// #elif V8_TARGET_ARCH_ARM64 && V8_HOST_ARCH_ARM64 && V8_OS_MACOSX
-+// #define V8_TRAP_HANDLER_SUPPORTED true
-+// // Arm64 simulator on x64 on Linux or Mac.
-+// #elif V8_TARGET_ARCH_ARM64 && V8_HOST_ARCH_X64 && (V8_OS_LINUX || V8_OS_MACOSX)
-+// #define V8_TRAP_HANDLER_VIA_SIMULATOR
-+// #define V8_TRAP_HANDLER_SUPPORTED true
-+// // Everything else is unsupported.
-+// #else
  #define V8_TRAP_HANDLER_SUPPORTED false
 -#endif
-+// #endif
  
  // Setup for shared library export.
  #if defined(BUILDING_V8_SHARED) && defined(V8_OS_WIN)
 diff --git a/lib/child_process.js b/lib/child_process.js
-index 415010241c..30a3f41250 100644
+index a4def6acce..134809c206 100644
 --- a/lib/child_process.js
 +++ b/lib/child_process.js
-@@ -589,7 +589,7 @@ function normalizeSpawnArguments(file, args, options) {
+@@ -611,10 +611,8 @@ function normalizeSpawnArguments(file, args, options) {
+     } else {
        if (typeof options.shell === 'string')
          file = options.shell;
-       else if (process.platform === 'android')
+-      else if (process.platform === 'android')
 -        file = '/system/bin/sh';
-+        file = '/data/data/vn.vhn.vsc/files/usr/bin/sh';
        else
-         file = '/bin/sh';
+-        file = '/bin/sh';
++        file = '/data/data/vn.vhn.vsc/files/usr/bin/sh';
        args = ['-c', command];
+     }
+   }
 diff --git a/lib/os.js b/lib/os.js
-index f0f0fdb15f..b7be05f8b7 100644
+index 860348a472..b73ba0a3c7 100644
 --- a/lib/os.js
 +++ b/lib/os.js
-@@ -183,7 +183,7 @@ function tmpdir() {
+@@ -191,7 +191,7 @@ function tmpdir() {
      path = safeGetenv('TMPDIR') ||
             safeGetenv('TMP') ||
             safeGetenv('TEMP') ||
@@ -225,10 +176,10 @@ index f0f0fdb15f..b7be05f8b7 100644
        path = StringPrototypeSlice(path, 0, -1);
    }
 diff --git a/node.gyp b/node.gyp
-index 74e9f9cc2e..5a4dfa3ff0 100644
+index 24505da7ba..63cc9a3856 100644
 --- a/node.gyp
 +++ b/node.gyp
-@@ -354,6 +354,7 @@
+@@ -402,6 +402,7 @@
  
        'include_dirs': [
          'src',
@@ -236,22 +187,178 @@ index 74e9f9cc2e..5a4dfa3ff0 100644
          '<(SHARED_INTERMEDIATE_DIR)' # for node_natives.h
        ],
        'dependencies': [
-@@ -1302,67 +1303,13 @@
-             'HAVE_INSPECTOR=1',
-           ],
-         }],
--        ['OS=="win"', {
-+        ['target_arch=="ia32"', {
-           'libraries': [
--            'dbghelp.lib',
--            'PsApi.lib',
--            'winmm.lib',
--            'Ws2_32.lib',
-+            '-latomic',
-           ],
+@@ -1126,165 +1127,6 @@
          }],
        ],
-     }, # mkcodecache
+     }, # fuzz_env
+-    {
+-      'target_name': 'cctest',
+-      'type': 'executable',
+-
+-      'dependencies': [
+-        '<(node_lib_target_name)',
+-        'deps/base64/base64.gyp:base64',
+-        'deps/googletest/googletest.gyp:gtest',
+-        'deps/googletest/googletest.gyp:gtest_main',
+-        'deps/histogram/histogram.gyp:histogram',
+-        'deps/uvwasi/uvwasi.gyp:uvwasi',
+-        'node_dtrace_header',
+-        'node_dtrace_ustack',
+-        'node_dtrace_provider',
+-      ],
+-
+-      'includes': [
+-        'node.gypi'
+-      ],
+-
+-      'include_dirs': [
+-        'src',
+-        'tools/msvs/genfiles',
+-        'deps/v8/include',
+-        'deps/cares/include',
+-        'deps/uv/include',
+-        'deps/uvwasi/include',
+-        'test/cctest',
+-      ],
+-
+-      'defines': [
+-        'NODE_ARCH="<(target_arch)"',
+-        'NODE_PLATFORM="<(OS)"',
+-        'NODE_WANT_INTERNALS=1',
+-      ],
+-
+-      'sources': [
+-        'src/node_snapshot_stub.cc',
+-        'src/node_code_cache_stub.cc',
+-        'test/cctest/node_test_fixture.cc',
+-        'test/cctest/node_test_fixture.h',
+-        'test/cctest/test_aliased_buffer.cc',
+-        'test/cctest/test_base64.cc',
+-        'test/cctest/test_base_object_ptr.cc',
+-        'test/cctest/test_node_postmortem_metadata.cc',
+-        'test/cctest/test_environment.cc',
+-        'test/cctest/test_js_native_api_v8.cc',
+-        'test/cctest/test_linked_binding.cc',
+-        'test/cctest/test_node_api.cc',
+-        'test/cctest/test_per_process.cc',
+-        'test/cctest/test_platform.cc',
+-        'test/cctest/test_report.cc',
+-        'test/cctest/test_json_utils.cc',
+-        'test/cctest/test_sockaddr.cc',
+-        'test/cctest/test_traced_value.cc',
+-        'test/cctest/test_util.cc',
+-        'test/cctest/test_url.cc',
+-      ],
+-
+-      'conditions': [
+-        [ 'node_use_openssl=="true"', {
+-          'defines': [
+-            'HAVE_OPENSSL=1',
+-          ],
+-          'sources': [
+-            'test/cctest/test_crypto_clienthello.cc',
+-            'test/cctest/test_node_crypto.cc',
+-          ]
+-        }],
+-        ['v8_enable_inspector==1', {
+-          'sources': [
+-            'test/cctest/test_inspector_socket.cc',
+-            'test/cctest/test_inspector_socket_server.cc'
+-          ],
+-          'defines': [
+-            'HAVE_INSPECTOR=1',
+-          ],
+-        }, {
+-           'defines': [
+-             'HAVE_INSPECTOR=0',
+-           ]
+-        }],
+-        ['OS=="solaris"', {
+-          'ldflags': [ '-I<(SHARED_INTERMEDIATE_DIR)' ]
+-        }],
+-        # Skip cctest while building shared lib node for Windows
+-        [ 'OS=="win" and node_shared=="true"', {
+-          'type': 'none',
+-        }],
+-        [ 'node_shared=="true"', {
+-          'xcode_settings': {
+-            'OTHER_LDFLAGS': [ '-Wl,-rpath,@loader_path', ],
+-          },
+-        }],
+-        ['OS=="win"', {
+-          'libraries': [
+-            'Dbghelp.lib',
+-            'winmm.lib',
+-            'Ws2_32.lib',
+-          ],
+-        }],
+-      ],
+-    }, # cctest
+-
+-    {
+-      'target_name': 'embedtest',
+-      'type': 'executable',
+-
+-      'dependencies': [
+-        '<(node_lib_target_name)',
+-        'deps/histogram/histogram.gyp:histogram',
+-        'deps/uvwasi/uvwasi.gyp:uvwasi',
+-        'node_dtrace_header',
+-        'node_dtrace_ustack',
+-        'node_dtrace_provider',
+-      ],
+-
+-      'includes': [
+-        'node.gypi'
+-      ],
+-
+-      'include_dirs': [
+-        'src',
+-        'tools/msvs/genfiles',
+-        'deps/v8/include',
+-        'deps/cares/include',
+-        'deps/uv/include',
+-        'deps/uvwasi/include',
+-        'test/embedding',
+-      ],
+-
+-      'sources': [
+-        'src/node_snapshot_stub.cc',
+-        'src/node_code_cache_stub.cc',
+-        'test/embedding/embedtest.cc',
+-      ],
+-
+-      'conditions': [
+-        ['OS=="solaris"', {
+-          'ldflags': [ '-I<(SHARED_INTERMEDIATE_DIR)' ]
+-        }],
+-        # Skip cctest while building shared lib node for Windows
+-        [ 'OS=="win" and node_shared=="true"', {
+-          'type': 'none',
+-        }],
+-        [ 'node_shared=="true"', {
+-          'xcode_settings': {
+-            'OTHER_LDFLAGS': [ '-Wl,-rpath,@loader_path', ],
+-          },
+-        }],
+-        ['OS=="win"', {
+-          'libraries': [
+-            'Dbghelp.lib',
+-            'winmm.lib',
+-            'Ws2_32.lib',
+-          ],
+-        }],
+-      ],
+-    }, # embedtest
+ 
+     {
+       'target_name': 'overlapped-checker',
+@@ -1363,59 +1205,13 @@
+             'Ws2_32.lib',
+           ],
+         }],
+-      ],
+-    }, # mkcodecache
 -    {
 -      'target_name': 'node_mksnapshot',
 -      'type': 'executable',
@@ -295,66 +402,20 @@ index 74e9f9cc2e..5a4dfa3ff0 100644
 -          ],
 -        }],
 -        ['OS=="win"', {
--          'libraries': [
++        ['target_arch=="ia32"', {
+           'libraries': [
 -            'Dbghelp.lib',
 -            'winmm.lib',
 -            'Ws2_32.lib',
--          ],
--        }],
--      ],
++            '-latomic',
+           ],
+         }],
+       ],
 -    }, # node_mksnapshot
++    }, # mkcodecache
    ], # end targets
  
    'conditions': [
-diff --git a/src/debug_utils.cc b/src/debug_utils.cc
-index c4c476942e..b91cb7cb84 100644
---- a/src/debug_utils.cc
-+++ b/src/debug_utils.cc
-@@ -500,11 +500,11 @@ void FWrite(FILE* file, const std::string& str) {
- 
-   WriteConsoleW(handle, wbuf.data(), n, nullptr, nullptr);
-   return;
--#elif defined(__ANDROID__)
--  if (file == stderr) {
--    __android_log_print(ANDROID_LOG_ERROR, "nodejs", "%s", str.data());
--    return;
--  }
-+// #elif defined(__ANDROID__)
-+//   if (file == stderr) {
-+//     __android_log_print(ANDROID_LOG_ERROR, "nodejs", "%s", str.data());
-+//     return;
-+//   }
- #endif
-   simple_fwrite();
- }
-diff --git a/src/node_internals.h b/src/node_internals.h
-index d37be23cd6..300c3075a3 100644
---- a/src/node_internals.h
-+++ b/src/node_internals.h
-@@ -281,7 +281,7 @@ class ThreadPoolWork {
- 
- // Functions defined in node.cc that are exposed via the bootstrapper object
- 
--#if defined(__POSIX__) && !defined(__ANDROID__) && !defined(__CloudABI__)
-+#if defined(__POSIX__) && !defined(__CloudABI__)
- #define NODE_IMPLEMENTS_POSIX_CREDENTIALS 1
- #endif  // defined(__POSIX__) && !defined(__ANDROID__) && !defined(__CloudABI__)
- 
-diff --git a/src/node_main.cc b/src/node_main.cc
-index 6bac107593..d16bc6ce4c 100644
---- a/src/node_main.cc
-+++ b/src/node_main.cc
-@@ -124,6 +124,10 @@ int main(int argc, char* argv[]) {
-   // calls elsewhere in the program (e.g., any logging from V8.)
-   setvbuf(stdout, nullptr, _IONBF, 0);
-   setvbuf(stderr, nullptr, _IONBF, 0);
-+  if(getenv("TMPDIR") == NULL) {
-+    // Give javascript programs (such as updated versions of npm) a working tmpdir.
-+    putenv("TMPDIR=/data/data/vn.vhn.vsc/files/tmp");
-+  }
-   return node::Start(argc, argv);
- }
- #endif
 diff --git a/tools/v8_gypfiles/toolchain.gypi b/tools/v8_gypfiles/toolchain.gypi
 index ecbd63b53f..2aabab9e2d 100644
 --- a/tools/v8_gypfiles/toolchain.gypi
@@ -369,28 +430,10 @@ index ecbd63b53f..2aabab9e2d 100644
      'v8_enable_backtrace%': 0,
  
 diff --git a/tools/v8_gypfiles/v8.gyp b/tools/v8_gypfiles/v8.gyp
-index a80778d3fa..db3522275c 100644
+index ed042f8829..f1af995933 100644
 --- a/tools/v8_gypfiles/v8.gyp
 +++ b/tools/v8_gypfiles/v8.gyp
-@@ -311,7 +311,7 @@
-           'sources': [
-             '<(V8_ROOT)/src/builtins/riscv64/builtins-riscv64.cc',
-           ],
--        }],        
-+        }],
-         ['v8_target_arch=="mips64" or v8_target_arch=="mips64el"', {
-           'sources': [
-             '<(V8_ROOT)/src/builtins/mips64/builtins-mips64.cc',
-@@ -904,7 +904,7 @@
-           'sources': [
-             '<!@pymod_do_main(GN-scraper "<(V8_ROOT)/BUILD.gn"  "\\"v8_base_without_compiler.*?v8_current_cpu == \\"riscv64\\".*?sources \\+= ")',
-           ],
--        }],        
-+        }],
-         ['OS=="win"', {
-           'msvs_precompiled_header': '<(V8_ROOT)/../../tools/msvs/pch/v8_pch.h',
-           'msvs_precompiled_source': '<(V8_ROOT)/../../tools/msvs/pch/v8_pch.cc',
-@@ -1121,6 +1121,7 @@
+@@ -1086,6 +1086,7 @@
              '<(V8_ROOT)/src/base/platform/platform-posix.h',
              '<(V8_ROOT)/src/base/platform/platform-posix-time.cc',
              '<(V8_ROOT)/src/base/platform/platform-posix-time.h',
@@ -398,7 +441,7 @@ index a80778d3fa..db3522275c 100644
            ],
            'link_settings': {
              'target_conditions': [
-@@ -1628,7 +1629,12 @@
+@@ -1581,7 +1582,12 @@
            }],
            ['clang or OS!="win"', {
              'conditions': [
@@ -408,7 +451,7 @@ index a80778d3fa..db3522275c 100644
 +                  '<(V8_ROOT)/src/heap/base/asm/ia32/push_registers_asm.cc',
 +                ],
 +              }],
-+              ['_toolset == "host" and host_arch == "x64" and (target_arch == "x64" or target_arch == "arm64") or (_toolset == "target" and target_arch == "x64")', {
++              ['_toolset == "host" and host_arch == "x64" and (target_arch == "arm64" or target_arch == "x64")', {
                  'sources': [
                    '<(V8_ROOT)/src/heap/base/asm/x64/push_registers_asm.cc',
                  ],

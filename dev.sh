@@ -79,7 +79,7 @@ main() {
             $USERRUN mv ./deps/v8/src/trap-handler/trap-handler.h ./deps/v8/src/trap-handler/trap-handler.h.orig
             cat ./deps/v8/src/trap-handler/trap-handler.h.orig | sed 's/define V8_TRAP_HANDLER_SUPPORTED true/define V8_TRAP_HANDLER_SUPPORTED false/g' | $USERRUN tee ./deps/v8/src/trap-handler/trap-handler.h
           fi
-          $USERRUN PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $NODE_CONFIGURE_NAME $ANDROID_BUILD_API_VERSION
+          $USERRUN PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $ANDROID_BUILD_API_VERSION $NODE_CONFIGURE_NAME
           NODE_MAKE_CUSTOM_LDFLAGS=
           if [[ "$ANDROID_ARCH" == "x86" ]]; then
             NODE_MAKE_CUSTOM_LDFLAGS=-latomic
