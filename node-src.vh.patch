@@ -402,7 +402,7 @@ index 24505da7ba..63cc9a3856 100644
 -          ],
 -        }],
 -        ['OS=="win"', {
-+        ['target_arch=="ia32"', {
++        ['target_arch=="ia32" or target_arch=="x86"', {
            'libraries': [
 -            'Dbghelp.lib',
 -            'winmm.lib',
@@ -446,7 +446,7 @@ index ed042f8829..f1af995933 100644
            ['clang or OS!="win"', {
              'conditions': [
 -              ['_toolset == "host" and host_arch == "x64" or _toolset == "target" and target_arch=="x64"', {
-+              ['_toolset == "host" and host_arch == "x64" and (target_arch == "arm" or target_arch == "ia32")', {
++              ['_toolset == "host" and host_arch == "x64" and (target_arch == "arm" or target_arch == "ia32" or target_arch == "x86")', {
 +                'sources': [
 +                  '<(V8_ROOT)/src/heap/base/asm/ia32/push_registers_asm.cc',
 +                ],
