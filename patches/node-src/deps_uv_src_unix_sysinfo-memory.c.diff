@@ -1,0 +1,18 @@
+Index: vscode/node-src/deps/uv/src/unix/sysinfo-memory.c
+===================================================================
+--- vscode.orig/node-src/deps/uv/src/unix/sysinfo-memory.c
++++ vscode/node-src/deps/uv/src/unix/sysinfo-memory.c
+@@ -26,10 +26,10 @@
+ #include <sys/sysinfo.h>
+ 
+ uint64_t uv_get_free_memory(void) {
+-  struct sysinfo info;
++//  struct sysinfo info;
+ 
+-  if (sysinfo(&info) == 0)
+-    return (uint64_t) info.freeram * info.mem_unit;
++//  if (sysinfo(&info) == 0)
++//    return (uint64_t) info.freeram * info.mem_unit;
+   return 0;
+ }
+ 

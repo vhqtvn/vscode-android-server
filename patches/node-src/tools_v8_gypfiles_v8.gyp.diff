@@ -1,0 +1,44 @@
+Index: vscode/node-src/tools/v8_gypfiles/v8.gyp
+===================================================================
+--- vscode.orig/node-src/tools/v8_gypfiles/v8.gyp
++++ vscode/node-src/tools/v8_gypfiles/v8.gyp
+@@ -291,7 +291,7 @@
+           'sources': [
+             '<(V8_ROOT)/src/builtins/riscv64/builtins-riscv64.cc',
+           ],
+-        }],        
++        }],
+         ['v8_target_arch=="mips64" or v8_target_arch=="mips64el"', {
+           'sources': [
+             '<(V8_ROOT)/src/builtins/mips64/builtins-mips64.cc',
+@@ -881,7 +881,7 @@
+           'sources': [
+             '<!@pymod_do_main(GN-scraper "<(V8_ROOT)/BUILD.gn"  "\\"v8_base_without_compiler.*?v8_current_cpu == \\"riscv64\\".*?sources \\+= ")',
+           ],
+-        }],        
++        }],
+         ['OS=="win" and _toolset=="target"', {
+           'msvs_precompiled_header': '<(V8_ROOT)/../../tools/msvs/pch/v8_pch.h',
+           'msvs_precompiled_source': '<(V8_ROOT)/../../tools/msvs/pch/v8_pch.cc',
+@@ -1086,6 +1086,7 @@
+             '<(V8_ROOT)/src/base/platform/platform-posix.h',
+             '<(V8_ROOT)/src/base/platform/platform-posix-time.cc',
+             '<(V8_ROOT)/src/base/platform/platform-posix-time.h',
++            '<(V8_ROOT)/src/base/platform/platform-linux.h',
+           ],
+           'link_settings': {
+             'target_conditions': [
+@@ -1581,7 +1582,12 @@
+           }],
+           ['clang or OS!="win"', {
+             'conditions': [
+-              ['_toolset == "host" and host_arch == "x64" or _toolset == "target" and target_arch=="x64"', {
++              ['_toolset == "host" and host_arch == "x64" and (target_arch == "arm" or target_arch == "ia32")', {
++                'sources': [
++                  '<(V8_ROOT)/src/heap/base/asm/ia32/push_registers_asm.cc',
++                ],
++              }],
++              ['_toolset == "host" and host_arch == "x64" and (target_arch == "x64" or target_arch == "arm64") or (_toolset == "target" and target_arch == "x64")', {
+                 'sources': [
+                   '<(V8_ROOT)/src/heap/base/asm/x64/push_registers_asm.cc',
+                 ],

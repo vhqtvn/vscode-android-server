@@ -19,7 +19,8 @@ main() {
         if [[ -f ./node-src.vh.patch ]]; then
           cd node-src && git apply ../node-src.vh.patch
         fi
-        quilt push -a
+        QUILT_PATCHES=patches/code-server quilt push -a
+        QUILT_PATCHES=patches/node-src quilt push -a
         ;;
       build-android-env)
         docker build ./container/android -t vsandroidenv:latest
@@ -73,7 +74,7 @@ main() {
           $USERRUN make clean
           git clean -dfX
           git checkout -f HEAD
-          git apply ../node-src.vh.patch
+          (cd .. && QUILT_PATCHES=patches/node-src quilt push -a -f)
           $USERRUN PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $ANDROID_BUILD_API_VERSION $NODE_CONFIGURE_NAME
           PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
           $USERRUN mkdir -p include/node

@@ -1,0 +1,13 @@
+Index: vscode/node-src/deps/uv/src/unix/core.c
+===================================================================
+--- vscode.orig/node-src/deps/uv/src/unix/core.c
++++ vscode/node-src/deps/uv/src/unix/core.c
+@@ -1125,7 +1125,7 @@ int uv_os_tmpdir(char* buffer, size_t* s
+ 
+   /* No temp environment variables defined */
+   #if defined(__ANDROID__)
+-    buf = "/data/local/tmp";
++    buf = "/data/data/vn.vhn.vsc/files/tmp";
+   #else
+     buf = "/tmp";
+   #endif

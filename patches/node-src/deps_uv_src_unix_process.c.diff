@@ -1,0 +1,22 @@
+Index: vscode/node-src/deps/uv/src/unix/process.c
+===================================================================
+--- vscode.orig/node-src/deps/uv/src/unix/process.c
++++ vscode/node-src/deps/uv/src/unix/process.c
+@@ -302,7 +302,7 @@ static void uv__process_child_init(const
+ 
+   if (options->cwd != NULL && chdir(options->cwd))
+     uv__write_errno(error_fd);
+-
++#if ZZZDISABLE
+   if (options->flags & (UV_PROCESS_SETUID | UV_PROCESS_SETGID)) {
+     /* When dropping privileges from root, the `setgroups` call will
+      * remove any extraneous groups. If we don't call this, then
+@@ -319,7 +319,7 @@ static void uv__process_child_init(const
+ 
+   if ((options->flags & UV_PROCESS_SETUID) && setuid(options->uid))
+     uv__write_errno(error_fd);
+-
++#endif
+   if (options->env != NULL) {
+     environ = options->env;
+   }

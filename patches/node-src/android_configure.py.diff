@@ -1,0 +1,13 @@
+Index: vscode/node-src/android_configure.py
+===================================================================
+--- vscode.orig/node-src/android_configure.py
++++ vscode/node-src/android_configure.py
+@@ -67,7 +67,7 @@ os.environ['CC'] = toolchain_path + "/bi
+ os.environ['CXX'] = toolchain_path + "/bin/" + TOOLCHAIN_PREFIX + android_sdk_version + "-" + "clang++"
+ 
+ GYP_DEFINES = "target_arch=" + arch
+-GYP_DEFINES += " v8_target_arch=" + arch
++GYP_DEFINES += " v8_target_arch=" + DEST_CPU
+ GYP_DEFINES += " android_target_arch=" + arch
+ GYP_DEFINES += " host_os=" + host_os + " OS=android"
+ os.environ['GYP_DEFINES'] = GYP_DEFINES

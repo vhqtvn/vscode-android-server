@@ -1,0 +1,13 @@
+Index: vscode/node-src/deps/uv/src/unix/fs.c
+===================================================================
+--- vscode.orig/node-src/deps/uv/src/unix/fs.c
++++ vscode/node-src/deps/uv/src/unix/fs.c
+@@ -1339,7 +1339,7 @@ static ssize_t uv__fs_copyfile(uv_fs_t*
+ #endif  /* !__linux__ */
+   }
+ 
+-#ifdef FICLONE
++#ifdef FICLONE_DISABLEDZZZ
+   if (req->flags & UV_FS_COPYFILE_FICLONE ||
+       req->flags & UV_FS_COPYFILE_FICLONE_FORCE) {
+     if (ioctl(dstfd, FICLONE, srcfd) == 0) {

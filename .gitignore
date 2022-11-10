@@ -8,3 +8,5 @@ rg
 current_building
 *.output
 .pc
+*.patch
+*.bk
