@@ -74,20 +74,8 @@ main() {
           git clean -dfX
           git checkout -f HEAD
           git apply ../node-src.vh.patch
-          if [[ "$ANDROID_ARCH" == "x86_64" ]]; then
-            $USERRUN git checkout HEAD -- ./deps/v8/src/trap-handler/trap-handler.h
-            $USERRUN mv ./deps/v8/src/trap-handler/trap-handler.h ./deps/v8/src/trap-handler/trap-handler.h.orig
-            cat ./deps/v8/src/trap-handler/trap-handler.h.orig | sed 's/define V8_TRAP_HANDLER_SUPPORTED true/define V8_TRAP_HANDLER_SUPPORTED false/g' | $USERRUN tee ./deps/v8/src/trap-handler/trap-handler.h
-          fi
           $USERRUN PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $ANDROID_BUILD_API_VERSION $NODE_CONFIGURE_NAME
-          NODE_MAKE_CUSTOM_LDFLAGS=
-          if [[ "$ANDROID_ARCH" == "x86" ]]; then
-            NODE_MAKE_CUSTOM_LDFLAGS=-latomic
-          fi
-          LDFLAGS="$LDFLAGS $NODE_MAKE_CUSTOM_LDFLAGS" PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
-          if [[ -f "deps/v8/src/trap-handler/trap-handler.h.orig" ]]; then
-            $USERRUN mv -f ./deps/v8/src/trap-handler/trap-handler.h.orig ./deps/v8/src/trap-handler/trap-handler.h
-          fi
+          PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
           $USERRUN mkdir -p include/node
           $USERRUN cp config.gypi include/node/config.gypi
           popd
