@@ -74,7 +74,7 @@ jobs:
           new_tag="${new_tag}-r${tag_rev}"
           git tag "$new_tag"
           git push --tags
-          echo "tag_name::$new_tag" >>$GITHUB_OUTPUT
+          echo "tag_name=$new_tag" >>$GITHUB_OUTPUT
       - name: Publish GitHub release
         uses: termux/upload-release-action@v3.0.3
         with:
