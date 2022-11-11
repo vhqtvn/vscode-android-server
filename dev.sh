@@ -162,7 +162,10 @@ main() {
           exit -1
         fi
         $USERRUN tar -czvf cs-$ANDROID_ARCH.tgz code-server/release-standalone code-server/VERSION node "libc++_shared.so"
-        find code-server/release-standalone/ -iname '*.node' | grep -v prebui | xargs file
+        {
+          find code-server/release-standalone/ -iname '*.node' | grep -vE 'watcher/prebuilds'
+          find code-server -type f -executable -print
+        } | sort | uniq | xargs file | grep -vE '(ASCII|UTF-8|OpenType|TrueType|JSON)'
         ;;
       docker-run)
         shift
