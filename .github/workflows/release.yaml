@@ -57,9 +57,9 @@ jobs:
         id: get_checksums
         run: |
           checksums=$(printf 'SHA-256:\n```\n%s\n```\n' "$(sha256sum *.tgz)")
-          checksums="${checksums//'%'/'%25'}"
-          checksums="${checksums//$'\n'/'%0A'}"
-          checksums="${checksums//$'\r'/'%0D'}"
+          # checksums="${checksums//'%'/'%25'}"
+          # checksums="${checksums//$'\n'/'%0A'}"
+          # checksums="${checksums//$'\r'/'%0D'}"
           echo "checksums=$checksums" >>$GITHUB_OUTPUT
       - name: Create new tag
         id: get_tag
