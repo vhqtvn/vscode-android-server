@@ -101,6 +101,7 @@ main() {
         YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
+	    export VERSION=(git describe --tags --abbrev=0 | sed 's/^v//')
             quilt push -a # changes made by code-server
             (cd ..;rm -rf .pc;QUILT_PATCHES=patches/code-server quilt push -a) || true # changes made by me
             yarn cache clean
@@ -140,6 +141,7 @@ main() {
             $YARN release:standalone
             cd release-standalone
             $YARN --production --frozen-lockfile --force
+	    unset VERSION
           popd
         fi
         rm -rf cs-$ANDROID_ARCH.tgz libc++_shared.so node
