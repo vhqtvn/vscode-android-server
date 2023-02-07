@@ -98,10 +98,10 @@ main() {
           chmod 0747 $f
           chmod 0747 "$f.orig"
         done
+        export VERSION=4.9.1
         YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
-            export VERSION=4.9.1
             quilt push -a # changes made by code-server
             (cd ..;rm -rf .pc;QUILT_PATCHES=patches/code-server quilt push -a) || true # changes made by me
             yarn cache clean
@@ -141,7 +141,6 @@ main() {
             $YARN release:standalone
             cd release-standalone
             $YARN --production --frozen-lockfile --force
-	    unset VERSION
           popd
         fi
         rm -rf cs-$ANDROID_ARCH.tgz libc++_shared.so node
@@ -151,7 +150,7 @@ main() {
         if [[ -f patch_version ]]; then
           VERSION_SUFFIX="-p$(cat patch_version)"
         fi
-      	echo "$(cat code-server/package.json | jq -r '.version')$VERSION_SUFFIX" | tr -d '\n' | $USERRUN tee code-server/VERSION
+      	echo "$VERSION$VERSION_SUFFIX" | tr -d '\n' | $USERRUN tee code-server/VERSION
         $USERRUN ANDROID_ARCH=$ANDROID_ARCH TERMUX_ARCH=$TERMUX_ARCH bash ./scripts/download-rg.sh
         find code-server/release-standalone -iname rg | while IPS= read p
         do
