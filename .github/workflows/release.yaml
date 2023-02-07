@@ -60,7 +60,9 @@ jobs:
           # checksums="${checksums//'%'/'%25'}"
           # checksums="${checksums//$'\n'/'%0A'}"
           # checksums="${checksums//$'\r'/'%0D'}"
-          echo "checksums=$checksums" >>$GITHUB_OUTPUT
+          echo "checksums<<CSCONTENT" >>$GITHUB_OUTPUT
+          echo "$checksums" >>$GITHUB_OUTPUT
+          echo "CSCONTENT" >>$GITHUB_OUTPUT
       - name: Create new tag
         id: get_tag
         run: |
