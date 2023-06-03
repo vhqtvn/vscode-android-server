@@ -98,7 +98,7 @@ main() {
           chmod 0747 $f
           chmod 0747 "$f.orig"
         done
-        export VERSION=4.9.1
+	export VERSION=$(cd code-server && git describe --tags)
         YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
