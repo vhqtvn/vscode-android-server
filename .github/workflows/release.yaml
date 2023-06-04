@@ -24,6 +24,7 @@ jobs:
       - name: Git clone
         uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           submodules: recursive
       - name: Free additional disk space
         run: |
