@@ -2,7 +2,7 @@ Index: vscode/node-src/deps/v8/src/flags/flag-definitions.h
 ===================================================================
 --- vscode.orig/node-src/deps/v8/src/flags/flag-definitions.h
 +++ vscode/node-src/deps/v8/src/flags/flag-definitions.h
-@@ -1971,7 +1971,7 @@ DEFINE_PERF_PROF_IMPLICATION(perf_prof,
+@@ -2364,7 +2364,7 @@ DEFINE_BOOL_READONLY(
  #undef DEFINE_PERF_PROF_BOOL
  #undef DEFINE_PERF_PROF_IMPLICATION
  

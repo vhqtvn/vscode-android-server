@@ -1,0 +1,13 @@
+Index: vscode/node-src/src/node_internals.h
+===================================================================
+--- vscode.orig/node-src/src/node_internals.h
++++ vscode/node-src/src/node_internals.h
+@@ -305,7 +305,7 @@ class ThreadPoolWork {
+ 
+ // Functions defined in node.cc that are exposed via the bootstrapper object
+ 
+-#if defined(__POSIX__) && !defined(__ANDROID__) && !defined(__CloudABI__)
++#if defined(__POSIX__) && !defined(__CloudABI__)
+ #define NODE_IMPLEMENTS_POSIX_CREDENTIALS 1
+ #endif  // defined(__POSIX__) && !defined(__ANDROID__) && !defined(__CloudABI__)
+ 

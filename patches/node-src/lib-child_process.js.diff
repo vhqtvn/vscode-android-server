@@ -2,7 +2,7 @@ Index: vscode/node-src/lib/child_process.js
 ===================================================================
 --- vscode.orig/node-src/lib/child_process.js
 +++ vscode/node-src/lib/child_process.js
-@@ -611,10 +611,8 @@ function normalizeSpawnArguments(file, a
+@@ -636,10 +636,8 @@ function normalizeSpawnArguments(file, a
      } else {
        if (typeof options.shell === 'string')
          file = options.shell;

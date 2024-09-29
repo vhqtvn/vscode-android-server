@@ -1,0 +1,23 @@
+Index: vscode/node-src/deps/npm/lib/commands/install.js
+===================================================================
+--- vscode.orig/node-src/deps/npm/lib/commands/install.js
++++ vscode/node-src/deps/npm/lib/commands/install.js
+@@ -122,6 +122,18 @@ class Install extends ArboristWorkspaceC
+           throw e
+         }
+       }
++      try {
++        if (forced) {
++          log.warn(
++            'install',
++            `Force installing npm version unpatched version of ${npmManifest.version}. This is very likely to break installation of global packages using npm. See https://github.com/termux/termux-packages/issues/13293`
++          )
++        } else {
++          throw new Error("Can't install npm globally as it will very likely break installation of global packages using npm. See https://github.com/termux/termux-packages/issues/13293")
++        }
++      } catch(e) {
++        throw e
++      }
+     }
+ 
+     // don't try to install the prefix into itself
