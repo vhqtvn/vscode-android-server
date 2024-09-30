@@ -18,4 +18,4 @@ case $ANDROID_ARCH in
         ;;
 esac
 
-/usr/bin/g++-9 $ADDITIONAL_ARGS "$@"
+/usr/bin/g++-10 $ADDITIONAL_ARGS "$@"

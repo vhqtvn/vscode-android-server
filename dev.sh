@@ -78,8 +78,8 @@ main() {
             NODE_MAKE_CUSTOM_LDFLAGS=-latomic
           fi
           LDFLAGS="$LDFLAGS $NODE_MAKE_CUSTOM_LDFLAGS" PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
-          $USERRUN mkdir -p include/node
-          $USERRUN cp config.gypi include/node/config.gypi
+          # $USERRUN mkdir -p include/node
+          # $USERRUN cp config.gypi include/node/config.gypi
           popd
         fi
         for f in /usr/lib/node_modules/npm/bin/node-gyp-bin/node-gyp; do
@@ -98,7 +98,7 @@ main() {
           chmod 0747 $f
           chmod 0747 "$f.orig"
         done
-	export VERSION=$(cd code-server && git describe --tags)
+        export VERSION=$(cd code-server && git describe --tags)
         YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
