@@ -2,7 +2,15 @@ Index: vscode/node-src/deps/v8/third_party/zlib/cpu_features.c
 ===================================================================
 --- vscode.orig/node-src/deps/v8/third_party/zlib/cpu_features.c
 +++ vscode/node-src/deps/v8/third_party/zlib/cpu_features.c
-@@ -100,13 +100,19 @@ void ZLIB_INTERNAL cpu_check_features(vo
+@@ -40,6 +40,7 @@ int ZLIB_INTERNAL x86_cpu_enable_simd =
+ 
+ #if defined(ARMV8_OS_ANDROID)
+ #include <cpu-features.h>
++#include <sys/auxv.h>
+ #elif defined(ARMV8_OS_LINUX)
+ #include <asm/hwcap.h>
+ #include <sys/auxv.h>
+@@ -100,13 +101,19 @@ void ZLIB_INTERNAL cpu_check_features(vo
  static void _cpu_check_features(void)
  {
  #if defined(ARMV8_OS_ANDROID) && defined(__aarch64__)
@@ -32,7 +40,15 @@ Index: vscode/node-src/deps/zlib/cpu_features.c
 ===================================================================
 --- vscode.orig/node-src/deps/zlib/cpu_features.c
 +++ vscode/node-src/deps/zlib/cpu_features.c
-@@ -106,13 +106,19 @@ void ZLIB_INTERNAL cpu_check_features(vo
+@@ -45,6 +45,7 @@ int ZLIB_INTERNAL riscv_cpu_enable_vclmu
+ 
+ #if defined(ARMV8_OS_ANDROID)
+ #include <cpu-features.h>
++#include <sys/auxv.h>
+ #elif defined(ARMV8_OS_LINUX)
+ #include <asm/hwcap.h>
+ #include <sys/auxv.h>
+@@ -106,13 +107,19 @@ void ZLIB_INTERNAL cpu_check_features(vo
  static void _cpu_check_features(void)
  {
  #if defined(ARMV8_OS_ANDROID) && defined(__aarch64__)
