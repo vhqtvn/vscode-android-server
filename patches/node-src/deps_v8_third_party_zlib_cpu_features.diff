@@ -1,0 +1,60 @@
+Index: vscode/node-src/deps/v8/third_party/zlib/cpu_features.c
+===================================================================
+--- vscode.orig/node-src/deps/v8/third_party/zlib/cpu_features.c
++++ vscode/node-src/deps/v8/third_party/zlib/cpu_features.c
+@@ -100,13 +100,19 @@ void ZLIB_INTERNAL cpu_check_features(vo
+ static void _cpu_check_features(void)
+ {
+ #if defined(ARMV8_OS_ANDROID) && defined(__aarch64__)
+-    uint64_t features = android_getCpuFeatures();
+-    arm_cpu_enable_crc32 = !!(features & ANDROID_CPU_ARM64_FEATURE_CRC32);
+-    arm_cpu_enable_pmull = !!(features & ANDROID_CPU_ARM64_FEATURE_PMULL);
++//    uint64_t features = android_getCpuFeatures();
++//    arm_cpu_enable_crc32 = !!(features & ANDROID_CPU_ARM64_FEATURE_CRC32);
++//    arm_cpu_enable_pmull = !!(features & ANDROID_CPU_ARM64_FEATURE_PMULL);
++        uint32_t hwcaps = getauxval(AT_HWCAP);
++        arm_cpu_enable_crc32 = !!(hwcaps & HWCAP_CRC32);
++        arm_cpu_enable_pmull = !!(hwcaps & HWCAP_PMULL); 
+ #elif defined(ARMV8_OS_ANDROID) /* aarch32 */
+-    uint64_t features = android_getCpuFeatures();
+-    arm_cpu_enable_crc32 = !!(features & ANDROID_CPU_ARM_FEATURE_CRC32);
+-    arm_cpu_enable_pmull = !!(features & ANDROID_CPU_ARM_FEATURE_PMULL);
++//    uint64_t features = android_getCpuFeatures();
++//    arm_cpu_enable_crc32 = !!(features & ANDROID_CPU_ARM_FEATURE_CRC32);
++//    arm_cpu_enable_pmull = !!(features & ANDROID_CPU_ARM_FEATURE_PMULL);
++        uint32_t hwcaps2 = getauxval(AT_HWCAP2);
++        arm_cpu_enable_crc32 = !!(hwcaps2 & HWCAP2_CRC32);
++        arm_cpu_enable_pmull = !!(hwcaps2 & HWCAP2_PMULL); 
+ #elif defined(ARMV8_OS_LINUX) && defined(__aarch64__)
+     unsigned long features = getauxval(AT_HWCAP);
+     arm_cpu_enable_crc32 = !!(features & HWCAP_CRC32);
+Index: vscode/node-src/deps/zlib/cpu_features.c
+===================================================================
+--- vscode.orig/node-src/deps/zlib/cpu_features.c
++++ vscode/node-src/deps/zlib/cpu_features.c
+@@ -106,13 +106,19 @@ void ZLIB_INTERNAL cpu_check_features(vo
+ static void _cpu_check_features(void)
+ {
+ #if defined(ARMV8_OS_ANDROID) && defined(__aarch64__)
+-    uint64_t features = android_getCpuFeatures();
+-    arm_cpu_enable_crc32 = !!(features & ANDROID_CPU_ARM64_FEATURE_CRC32);
+-    arm_cpu_enable_pmull = !!(features & ANDROID_CPU_ARM64_FEATURE_PMULL);
++//    uint64_t features = android_getCpuFeatures();
++//    arm_cpu_enable_crc32 = !!(features & ANDROID_CPU_ARM64_FEATURE_CRC32);
++//    arm_cpu_enable_pmull = !!(features & ANDROID_CPU_ARM64_FEATURE_PMULL);
++        uint32_t hwcaps = getauxval(AT_HWCAP);
++        arm_cpu_enable_crc32 = !!(hwcaps & HWCAP_CRC32);
++        arm_cpu_enable_pmull = !!(hwcaps & HWCAP_PMULL); 
+ #elif defined(ARMV8_OS_ANDROID) /* aarch32 */
+-    uint64_t features = android_getCpuFeatures();
+-    arm_cpu_enable_crc32 = !!(features & ANDROID_CPU_ARM_FEATURE_CRC32);
+-    arm_cpu_enable_pmull = !!(features & ANDROID_CPU_ARM_FEATURE_PMULL);
++//    uint64_t features = android_getCpuFeatures();
++//    arm_cpu_enable_crc32 = !!(features & ANDROID_CPU_ARM_FEATURE_CRC32);
++//    arm_cpu_enable_pmull = !!(features & ANDROID_CPU_ARM_FEATURE_PMULL);
++        uint32_t hwcaps2 = getauxval(AT_HWCAP2);
++        arm_cpu_enable_crc32 = !!(hwcaps2 & HWCAP2_CRC32);
++        arm_cpu_enable_pmull = !!(hwcaps2 & HWCAP2_PMULL); 
+ #elif defined(ARMV8_OS_LINUX) && defined(__aarch64__)
+     unsigned long features = getauxval(AT_HWCAP);
+     arm_cpu_enable_crc32 = !!(features & HWCAP_CRC32);

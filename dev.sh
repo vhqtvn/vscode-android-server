@@ -68,18 +68,19 @@ main() {
       	set -e
         if [ ! -z "$BUILD_NODE" ]; then
           pushd node-src
-          $USERRUN make clean
+          make clean
           git clean -dfX
           git checkout -f HEAD
           (cd ..; rm -rf .pc; QUILT_PATCHES=patches/node-src quilt push -a -f)
           $USERRUN PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $ANDROID_BUILD_API_VERSION $NODE_CONFIGURE_NAME
+          # For symbol android_getCpuFeatures
           NODE_MAKE_CUSTOM_LDFLAGS=
           if [[ "$ANDROID_ARCH" == "x86" ]]; then
-            NODE_MAKE_CUSTOM_LDFLAGS=-latomic
+            NODE_MAKE_CUSTOM_LDFLAGS="$NODE_MAKE_CUSTOM_LDFLAGS -latomic"
           fi
           LDFLAGS="$LDFLAGS $NODE_MAKE_CUSTOM_LDFLAGS" PATH=/vscode-build/hostbin:$PATH JOBS=$(nproc) make -j $(nproc)
-          # $USERRUN mkdir -p include/node
-          # $USERRUN cp config.gypi include/node/config.gypi
+          $USERRUN mkdir -p include/node
+          $USERRUN cp config.gypi include/node/config.gypi
           popd
         fi
         for f in /usr/lib/node_modules/npm/bin/node-gyp-bin/node-gyp; do
