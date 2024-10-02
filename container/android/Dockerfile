@@ -288,6 +288,10 @@ ENV ANDROID_ARCH=aarch64
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y update \
  && DEBIAN_FRONTEND=noninteractive apt-get -y install quilt
 
+# install git-lfs
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y install git-lfs
+
 RUN git config --global --add safe.directory /vscode \
     && git config --global --add safe.directory /vscode/code-server \
     && git config --global --add safe.directory /vscode/code-server/lib/vscode \
