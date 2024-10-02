@@ -69,11 +69,11 @@ main() {
         if [ ! -z "$BUILD_NODE" ]; then
           pushd node-src
           make clean
-          git clean -dfX
+          git clean -dfx
           git checkout -f HEAD
           (cd ..; rm -rf .pc; QUILT_PATCHES=patches/node-src quilt push -a -f)
+          sed -i "s|<(android_ndk_path)|$NDK|g" common.gypi
           $USERRUN PATH=/vscode-build/hostbin:$PATH CC_host=gcc CXX_host=g++ LINK_host=g++ ./android-configure /opt/android-ndk/ $ANDROID_BUILD_API_VERSION $NODE_CONFIGURE_NAME
-          # For symbol android_getCpuFeatures
           NODE_MAKE_CUSTOM_LDFLAGS=
           if [[ "$ANDROID_ARCH" == "x86" ]]; then
             NODE_MAKE_CUSTOM_LDFLAGS="$NODE_MAKE_CUSTOM_LDFLAGS -latomic"
@@ -103,6 +103,9 @@ main() {
         YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
+            git checkout -f HEAD
+            git clean -dfx
+            git submodule foreach --recursive 'git checkout -f HEAD; git clean -dfx'
             quilt push -a # changes made by code-server
             (cd ..;rm -rf .pc;QUILT_PATCHES=patches/code-server quilt push -a) || true # changes made by me
             yarn cache clean
