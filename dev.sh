@@ -102,8 +102,6 @@ main() {
         export VERSION=$(cd code-server && git describe --tags)
         YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
-          $USERRUN ANDROID_ARCH=$ANDROID_ARCH TERMUX_ARCH=$TERMUX_ARCH bash ./scripts/download-krb5.sh
-          export VSC_ANDROID_BUILDSYSTEM_KRB5_ROOT=/vscode-build/tmp/krb5/$ANDROID_ARCH/data/data/vn.vhn.vsc/files/usr
           pushd code-server
             git checkout -f HEAD
             git clean -dfx
