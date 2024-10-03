@@ -6,14 +6,16 @@ codeserver_remove_unuseful_node_module() {
   # remove $2 from $1/package.json
   if [[ -f $1/package.json ]]; then
     jq "del(.dependencies[\"$2\"]) | del(.devDependencies[\"$2\"])" $1/package.json > $1/package.json.tmp
+    chown $(stat -c "%u:%g" $1/package.json) $1/package.json.tmp
     mv $1/package.json.tmp $1/package.json
   fi
   # remove $2 from $1/yarn.lock
   if [[ -f $1/yarn.lock ]]; then
     # remove $2 and its versions from yarn.lock
-    # sed -i'' "/^$2@.*:/,/^$/d" $1/yarn.lock
-    # use ed to edit file in place
-    echo -e "g/^$2@.*:/,/^$/d\nw" | ed -s $1/yarn.lock
+    sed -i.bk "/^$2@.*:/,/^$/d" $1/yarn.lock
+    # chown $1/yarn.lock back to the original user
+    chown $(stat -c "%u:%g" $1/yarn.lock.bk) $1/yarn.lock
+    rm $1/yarn.lock.bk
   fi
 }
 
@@ -124,9 +126,9 @@ main() {
         YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
-            git checkout -f HEAD
+            $USERRUN git checkout -f HEAD
             git clean -dfx
-            git submodule foreach --recursive 'git checkout -f HEAD; git clean -dfx'
+            $USERRUN git submodule foreach --recursive 'git checkout -f HEAD; git clean -dfx'
             quilt push -a # changes made by code-server
             (cd ..;rm -rf .pc;QUILT_PATCHES=patches/code-server quilt push -a) || true # changes made by me
             codeserver_remove_unuseful_node_modules lib/vscode
