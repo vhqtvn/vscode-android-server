@@ -1,5 +1,24 @@
 #!/usr/bin/env bash
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+codeserver_remove_unuseful_node_module() {
+  # remove $2 from $1/package.json
+  if [[ -f $1/package.json ]]; then
+    jq "del(.dependencies[\"$2\"]) | del(.devDependencies[\"$2\"])" $1/package.json > $1/package.json.tmp
+    mv $1/package.json.tmp $1/package.json
+  fi
+  # remove $2 from $1/yarn.lock
+  if [[ -f $1/yarn.lock ]]; then
+    # remove $2 and its versions from yarn.lock
+    sed -i'' "/^$2@.*:/,/^$/d" $1/yarn.lock
+  fi
+}
+
+codeserver_remove_unuseful_node_modules() {
+  codeserver_remove_unuseful_node_module $1 kerberos
+}
+
 main() {
   cd "$(dirname "$0")/"
 
@@ -108,6 +127,8 @@ main() {
             git submodule foreach --recursive 'git checkout -f HEAD; git clean -dfx'
             quilt push -a # changes made by code-server
             (cd ..;rm -rf .pc;QUILT_PATCHES=patches/code-server quilt push -a) || true # changes made by me
+            codeserver_remove_unuseful_node_modules lib/vscode
+            codeserver_remove_unuseful_node_modules lib/vscode/remote
             yarn cache clean
             $USERRUN yarn cache clean
             sub_builder() {
