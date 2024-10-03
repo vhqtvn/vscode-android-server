@@ -128,7 +128,8 @@ main() {
           pushd code-server
             $USERRUN git checkout -f HEAD
             git clean -dfx
-            $USERRUN git submodule foreach --recursive 'git checkout -f HEAD; git clean -dfx'
+            $USERRUN git submodule foreach --recursive 'git checkout -f HEAD'
+            git submodule foreach --recursive 'git clean -dfx'
             quilt push -a # changes made by code-server
             (cd ..;rm -rf .pc;QUILT_PATCHES=patches/code-server quilt push -a) || true # changes made by me
             codeserver_remove_unuseful_node_modules lib/vscode
