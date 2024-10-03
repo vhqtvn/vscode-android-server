@@ -11,7 +11,9 @@ codeserver_remove_unuseful_node_module() {
   # remove $2 from $1/yarn.lock
   if [[ -f $1/yarn.lock ]]; then
     # remove $2 and its versions from yarn.lock
-    sed -i'' "/^$2@.*:/,/^$/d" $1/yarn.lock
+    # sed -i'' "/^$2@.*:/,/^$/d" $1/yarn.lock
+    # use ed to edit file in place
+    echo -e "g/^$2@.*:/,/^$/d\nw" | ed -s $1/yarn.lock
   fi
 }
 
@@ -134,6 +136,7 @@ main() {
             sub_builder() {
               find $1 -iname yarn.lock | grep -v node_modules | while IPS= read dir
               do
+                [[ "$dir" == "/vscode/code-server/test/unit/node/test-plugin" ]] && continue
                 echo "$dir"
                 pushd "$(dirname "$dir")"
                 set -x
