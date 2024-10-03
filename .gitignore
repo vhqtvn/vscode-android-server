@@ -10,3 +10,4 @@ current_building
 .pc
 *.patch
 *.bk
+tmp

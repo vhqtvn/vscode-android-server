@@ -398,7 +398,7 @@ extern	Bool		XkbTranslateKeyCode(
 
 extern	int		XkbTranslateKeySym(
     Display *			/* dpy */,
-    register KeySym *		/* sym_return */,
+    KeySym *		/* sym_return */,
     unsigned int 		/* modifiers */,
     char *			/* buffer */,
     int 			/* nbytes */,
