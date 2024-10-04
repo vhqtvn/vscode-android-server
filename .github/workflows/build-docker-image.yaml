@@ -13,6 +13,11 @@ on:
 env:
   IMAGE_NAME: vanhoavn/vheditor-codeserver-builder
 
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
