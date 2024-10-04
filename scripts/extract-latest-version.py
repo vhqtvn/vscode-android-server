@@ -2,7 +2,7 @@
 # Description: Extract the latest version deb of a package from the list of debs
 # Usage: python3 extract-latest-version.py <package_prefix>
 # Debs are read from stdin and the latest version deb is printed to stdout
-# 
+#
 # Example: python3 extract-latest-version.py krb5
 # Input:
 # debs/16bb2083331c057477d327bd6ccf874968de4a55/arm/krb5_1.20.1_arm.deb
@@ -23,39 +23,81 @@
 import sys
 import re
 
+def semver_split_1(version):
+    if "-" in version:
+        return version.split("-", 1)
+    return version, ""
+
+def semver_compare_main_part(version1, version2):
+    version1_parts = version1.split(".")
+    version2_parts = version2.split(".")
+
+    for i in range(0, min(len(version1_parts), len(version2_parts))):
+        if version1_parts[i] < version2_parts[i]:
+            return -1
+        elif version1_parts[i] > version2_parts[i]:
+            return 1
+
+    if len(version1_parts) < len(version2_parts):
+        return -1
+    elif len(version1_parts) > len(version2_parts):
+        return 1
+    return 0
+
+def semver_compare_ext(ext1, ext2):
+    if ext1 == ext2:
+        return 0
+    elif ext1 < ext2:
+        return -1
+    return 1    
+
+def semver_compare(version1, version2):
+    version1_main, version1_ext = semver_split_1(version1)
+    version2_main, version2_ext = semver_split_1(version2)
+
+    match semver_compare_main_part(version1_main, version2_main):
+        case -1:
+            return -1
+        case 1:
+            return 1
+        case 0:
+            return semver_compare_ext(version1_ext, version2_ext)
+
 def extract_version(deb_path, package_prefix):
-  """
-  Extracts the version number from a deb file path.
+    """
+    Extracts the version number from a deb file path.
 
-  Args:
-    deb_path: The path to the deb file.
-    package_prefix: The prefix of the package name.
+    Args:
+      deb_path: The path to the deb file.
+      package_prefix: The prefix of the package name.
 
-  Returns:
-    A tuple containing the version number as a string and the deb path.
-  """
-  pattern = rf"{package_prefix}_([^_]+)_arm\.deb"
-  match = re.search(pattern, deb_path)
-  if match:
-    version = match.group(1)
-    return (version, deb_path)
-  return None
+    Returns:
+      A tuple containing the version number as a string and the deb path.
+    """
+    pattern = rf"{package_prefix}_([^_]+)_(arm|x86_64|aarch64|i686)\.deb"
+    match = re.search(pattern, deb_path)
+    if match:
+        version = match.group(1)
+        return (version, deb_path)
+    return None
+
 
 def main():
-  """
-  Reads deb file paths from stdin, extracts the latest version, and prints it to stdout.
-  """
-  package_prefix = sys.argv[1]
-  debs = []
-  for line in sys.stdin:
-    deb_path = line.strip()
-    version = extract_version(deb_path, package_prefix)
-    if version:
-      debs.append(version)
+    """
+    Reads deb file paths from stdin, extracts the latest version, and prints it to stdout.
+    """
+    package_prefix = sys.argv[1]
+    debs = []
+    for line in sys.stdin:
+        deb_path = line.strip()
+        version = extract_version(deb_path, package_prefix)
+        if version:
+            debs.append(version)
 
-  if debs:
-    latest_deb = max(debs)
-    print(latest_deb[1])
+    if debs:
+        latest_deb = max(debs)
+        print(latest_deb[1])
 
-if __name__ == '__main__':
-  main()
+
+if __name__ == "__main__":
+    main()
