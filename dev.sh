@@ -176,7 +176,7 @@ main() {
         fi
         rm -rf cs-$ANDROID_ARCH.tgz libc++_shared.so node
         cp node-src/out/Release/node ./
-        cp /opt/android-ndk/sources/cxx-stl/llvm-libc++/libs/$ARCH_NAME/libc++_shared.so ./libc++_shared.so
+        cp /opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$TERMUX_ARCH-linux-android/libc++_shared.so ./libc++_shared.so
         VERSION_SUFFIX=
         if [[ -f patch_version ]]; then
           VERSION_SUFFIX="-p$(cat patch_version)"
