@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    runs-on: vscode-android-server
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         arch:
@@ -44,7 +44,7 @@ jobs:
           path: "*.tgz"
   publish:
     needs: build
-    runs-on: vscode-android-server
+    runs-on: ubuntu-latest
     steps:
       - name: Git clone
         uses: actions/checkout@v4
