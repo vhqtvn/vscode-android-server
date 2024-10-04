@@ -36,7 +36,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
     unzip \
     tree \
     clang \
-    jq
+    jq \
+    file
 
 # Install NodeJS
 #  from official docs: https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
