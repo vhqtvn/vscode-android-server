@@ -139,7 +139,7 @@ main() {
             sub_builder() {
               find $1 -iname yarn.lock | grep -v node_modules | while IPS= read dir
               do
-                [[ "$dir" == "/vscode/code-server/test/unit/node/test-plugin" ]] && continue
+                [[ "$dir" == "./test/unit/node/test-plugin/yarn.lock" ]] && continue
                 echo "$dir"
                 pushd "$(dirname "$dir")"
                 set -x
