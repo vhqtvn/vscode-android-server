@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     strategy:
       matrix:
         arch:
@@ -44,7 +44,7 @@ jobs:
           path: "*.tgz"
   publish:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     steps:
       - name: Git clone
         uses: actions/checkout@v4
