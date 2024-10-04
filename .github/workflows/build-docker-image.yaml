@@ -1,4 +1,4 @@
-name: Generate code-server archives
+name: Build and push Docker image
 
 on:
   # push:
