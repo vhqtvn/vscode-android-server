@@ -10,6 +10,9 @@ on:
   #   - cron: "0 0 * * 0"
   workflow_dispatch:
 
+env:
+  IMAGE_NAME: vanhoavn/vheditor-codeserver-builder
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,8 +36,15 @@ jobs:
           sudo apt autoremove -yq
           sudo apt clean
           sudo rm -fr /opt/ghc /opt/hostedtoolcache /usr/lib/node_modules /usr/local /usr/share/dotnet /usr/share/swift
-      - name: Build docker
-        run: ./dev.sh build-android-env
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          username: vanhoavn
+          password: ${{ secrets.DOCKERHUB_PAT }}
+      - name: Pull Docker image
+        run: |
+          docker pull $IMAGE_NAME:master
+          docker tag $IMAGE_NAME:master vsandroidenv:latest
       - name: Create archive
         run: ./dev.sh docker-run bash -c './dev.sh apply-patch && BUILD_NODE=1 BUILD_RELEASE=1 ANDROID_ARCH=${{ matrix.arch }} ./dev.sh release'
       - name: Store artifacts
