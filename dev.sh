@@ -176,7 +176,25 @@ main() {
         fi
         rm -rf cs-$ANDROID_ARCH.tgz libc++_shared.so node
         cp node-src/out/Release/node ./
-        cp /opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$TERMUX_ARCH-linux-android/libc++_shared.so ./libc++_shared.so
+        case $ANDROID_ARCH in
+          arm|armeabi-v7a)
+            LIBCPP_ARCH_NAME="arm-linux-androideabi"
+          ;;
+          x86)
+            LIBCPP_ARCH_NAME="i686-linux-android"
+          ;;
+          x86_64)
+            LIBCPP_ARCH_NAME="x86_64-linux-android"
+            ;;
+          arm64|aarch64)
+            LIBCPP_ARCH_NAME="aarch64-linux-android"
+            ;;
+          *)
+            echo "Unsupported arch $ANDROID_ARCH"
+            exit 1
+            ;;
+        esac
+        cp /opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$LIBCPP_ARCH_NAME/libc++_shared.so ./libc++_shared.so
         VERSION_SUFFIX=
         if [[ -f patch_version ]]; then
           VERSION_SUFFIX="-p$(cat patch_version)"
