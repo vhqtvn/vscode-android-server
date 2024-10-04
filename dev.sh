@@ -166,10 +166,6 @@ main() {
                   $YARN --frozen-lockfile --production=false
             popd
             $YARN build
-            # drop ram cache
-            sync
-            echo 3 > /proc/sys/vm/drop_caches
-           
             DISABLE_V8_COMPILE_CACHE=1 $YARN build:vscode
             $YARN release
             #nonexisten proxy to disable downloading
