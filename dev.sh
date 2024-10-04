@@ -166,7 +166,11 @@ main() {
                   $YARN --frozen-lockfile --production=false
             popd
             $YARN build
-            $YARN build:vscode
+            # drop ram cache
+            sync
+            echo 3 > /proc/sys/vm/drop_caches
+           
+            DISABLE_V8_COMPILE_CACHE=1 $YARN build:vscode
             $YARN release
             #nonexisten proxy to disable downloading
             $YARN release:standalone
@@ -204,6 +208,8 @@ main() {
         set -x
         docker run --rm \
                 -w /vscode \
+                --memory=13g \
+                --memory-swap=-1 \
                 -e ANDROID_BUILD_API_VERSION=24 \
                 -v $(pwd):/vscode \
                 -v $(pwd)/container/android:/vscode-build \
