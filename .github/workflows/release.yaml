@@ -50,7 +50,7 @@ jobs:
       - name: Store artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: cs-archives-${{ github.sha }}
+          name: cs-archives-${{ github.sha }}-${{ matrix.arch }}
           path: "*.tgz"
   publish:
     needs: build
@@ -63,8 +63,9 @@ jobs:
       - name: Fetch archives
         uses: actions/download-artifact@v4
         with:
-          name: cs-archives-${{ github.sha }}
+          pattern: cs-archives-${{ github.sha }}-*
           path: ./
+          merge-multiple: true
       - name: Get checksums
         id: get_checksums
         run: |
