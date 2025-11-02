@@ -3,19 +3,55 @@
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 codeserver_remove_unuseful_node_module() {
-  # remove $2 from $1/package.json
-  if [[ -f $1/package.json ]]; then
-    jq "del(.dependencies[\"$2\"]) | del(.devDependencies[\"$2\"])" $1/package.json > $1/package.json.tmp
-    chown $(stat -c "%u:%g" $1/package.json) $1/package.json.tmp
-    mv $1/package.json.tmp $1/package.json
+  local dir="$1"
+  local name="$2"
+  [ -z "$dir" ] || [ -z "$name" ] && { echo "usage: codeserver_remove_unuseful_node_module <dir> <pkg>"; return 2; }
+
+  # --- package.json ---
+  if [[ -f "$dir/package.json" ]]; then
+    tmp="$(mktemp)"
+    if jq --arg pkg "$name" '
+        ( .dependencies      // {} ) as $d
+      | ( .devDependencies  // {} ) as $dd
+      | .dependencies     = ($d  | del(.[$pkg]))
+      | .devDependencies  = ($dd | del(.[$pkg]))
+    ' "$dir/package.json" > "$tmp"; then
+      chown "$(stat -c '%u:%g' "$dir/package.json")" "$tmp"
+      mv "$tmp" "$dir/package.json"
+    else
+      rm -f "$tmp"; echo "jq failed to edit package.json" >&2; return 1
+    fi
   fi
-  # remove $2 from $1/yarn.lock
-  if [[ -f $1/yarn.lock ]]; then
-    # remove $2 and its versions from yarn.lock
-    sed -i.bk "/^$2@.*:/,/^$/d" $1/yarn.lock
-    # chown $1/yarn.lock back to the original user
-    chown $(stat -c "%u:%g" $1/yarn.lock.bk) $1/yarn.lock
-    rm $1/yarn.lock.bk
+
+  # --- package-lock.json (supports lockfileVersion 1/2/3) ---
+  if [[ -f "$dir/package-lock.json" ]]; then
+    tmp="$(mktemp)"
+    # node_modules path inside packages map (v2/v3); works for scoped names too
+    local nm_path="node_modules/$name"
+
+    if jq --arg pkg "$name" --arg nm "$nm_path" '
+      # Remove from top-level dependencies map (v1/v2/v3)
+      (if .dependencies? then .dependencies |= with_entries(select(.key != $pkg)) else . end)
+      # Remove package entry from packages map (v2/v3)
+      | (if .packages? then .packages |= (with_entries(
+            if .key == $nm then empty else
+              (.value |= ( if .dependencies? then .dependencies |= with_entries(select(.key != $pkg)) else . end ))
+            end))
+         else . end)
+      # Also clean any direct child in .packages[""] (root) deps (v2/v3)
+      | (if .packages? and (.packages[""]? // null) then
+           .packages[""] |= ( if .dependencies? then .dependencies |= with_entries(select(.key != $pkg)) else . end )
+         else . end)
+    ' "$dir/package-lock.json" > "$tmp"; then
+      chown "$(stat -c '%u:%g' "$dir/package-lock.json")" "$tmp"
+      mv "$tmp" "$dir/package-lock.json"
+    else
+      rm -f "$tmp"; echo "jq failed to edit package-lock.json" >&2; return 1
+    fi
+  fi
+
+  if [[ -d "$dir/node_modules/$name" ]]; then
+    rm -rf -- "$dir/node_modules/$name"
   fi
 }
 
@@ -123,7 +159,7 @@ main() {
           chmod 0747 "$f.orig"
         done
         export VERSION=$(cd code-server && git describe --tags)
-        YARN="$USERRUN CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH yarn"
+        NPM_BIN="$USERRUN npm_config_build_from_source=true CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH npm"
         if [ ! -z "$BUILD_RELEASE" ]; then
           pushd code-server
             $USERRUN git checkout -f HEAD
@@ -132,46 +168,45 @@ main() {
             git submodule foreach --recursive 'git clean -dfx'
             quilt push -a # changes made by code-server
             (cd ..;rm -rf .pc;QUILT_PATCHES=patches/code-server quilt push -a) || true # changes made by me
-            codeserver_remove_unuseful_node_modules lib/vscode
-            codeserver_remove_unuseful_node_modules lib/vscode/remote
-            yarn cache clean
-            $USERRUN yarn cache clean
-            sub_builder() {
-              find $1 -iname yarn.lock | grep -v node_modules | while IPS= read dir
-              do
-                [[ "$dir" == "./test/unit/node/test-plugin/yarn.lock" ]] && continue
-                echo "$dir"
-                pushd "$(dirname "$dir")"
-                set -x
-                  echo "* Work on $(pwd)"
-                  $YARN --frozen-lockfile --production=false
-                  [[ "$(jq ".scripts.build" package.json )" != "null" ]] && $YARN build
-                  [[ "$(jq ".scripts.release" package.json )" != "null" ]] && $YARN release
-                  [[ "$(jq ".scripts[\"release:standalone\"]" package.json )" != "null" ]] && $YARN release:standalone
-                  $YARN --frozen-lockfile --production
-                set +x
-                popd
-              done
-            }
-            rm -rf release release-standalone node_modules
-            export NODE_PATH=/usr/lib/node_modules
-            npm install -g @mapbox/node-pre-gyp node-addon-api
-            $USERRUN mv -f yarn.lock.origbk yarn.lock || true
-            $YARN --production=false --frozen-lockfile
-            $USERRUN mv -f yarn.lock yarn.lock.origbk || true
-            sub_builder .
-            $USERRUN mv -f yarn.lock.origbk yarn.lock || true
-            sub_builder lib
-            pushd lib/vscode
-                  $YARN --frozen-lockfile --production=false
-            popd
-            $YARN build
-            DISABLE_V8_COMPILE_CACHE=1 $YARN build:vscode
-            $YARN release
-            #nonexisten proxy to disable downloading
-            $YARN release:standalone
+            # codeserver_remove_unuseful_node_modules lib/vscode
+            # codeserver_remove_unuseful_node_modules lib/vscode/remote
+            npm cache clean --force
+            $USERRUN npm cache clean --force
+            # sub_builder() {
+            #   find $1 -iname package-lock.json | grep -v node_modules | while IPS= read dir
+            #   do
+            #     [[ "$dir" == "./test/unit/node/test-plugin/package-lock.json" ]] && continue
+            #     echo "$dir"
+            #     pushd "$(dirname "$dir")"
+            #     set -x
+            #       echo "* Work on $(pwd)"
+            #       $NPM_BIN ci
+            #       [[ "$(jq ".scripts.build" package.json )" != "null" ]] && $NPM_BIN run build
+            #       [[ "$(jq ".scripts.release" package.json )" != "null" ]] && $NPM_BIN run release
+            #       [[ "$(jq ".scripts[\"release:standalone\"]" package.json )" != "null" ]] && $NPM_BIN run release:standalone
+            #     set +x
+            #     popd
+            #   done
+            # }
+            # rm -rf release release-standalone node_modules
+            # export NODE_PATH=/usr/lib/node_modules
+            # npm install -g @mapbox/node-pre-gyp node-addon-api
+            # $USERRUN mv -f package-lock.json.origbk package-lock.json || true
+            # $NPM_BIN ci
+            # $USERRUN mv -f package-lock.json package-lock.json.origbk || true
+            # sub_builder .
+            # $USERRUN mv -f package-lock.json package-lock.json.origbk || true
+            # sub_builder lib
+            # pushd lib/vscode
+            #       $NPM_BIN ci
+            # popd
+            # $NPM_BIN run build
+            # DISABLE_V8_COMPILE_CACHE=1 $NPM_BIN run build:vscode
+            # $NPM_BIN run release
+            #
+            $NPM_BIN run release:standalone
             cd release-standalone
-            $YARN --production --frozen-lockfile --force
+            $NPM_BIN ci --production
           popd
         fi
         rm -rf cs-$ANDROID_ARCH.tgz libc++_shared.so node
