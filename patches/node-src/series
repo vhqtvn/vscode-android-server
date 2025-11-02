@@ -7,7 +7,6 @@ deps_uv_uv.gyp.diff
 deps_npm_lib_cli_entry.js.diff
 deps_npm_lib_commands_install.js.diff
 deps_v8_src_flags_flag_definitions.h.diff
-deps_v8_src_logging_log.cc.diff
 deps_v8_src_trap_handler_trap_handler.h.diff
 lib_child_process.js.diff
 lib_os.js.diff
