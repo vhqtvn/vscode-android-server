@@ -2,7 +2,7 @@ Index: vscode/node-src/src/node_internals.h
 ===================================================================
 --- vscode.orig/node-src/src/node_internals.h
 +++ vscode/node-src/src/node_internals.h
-@@ -305,7 +305,7 @@ class ThreadPoolWork {
+@@ -326,7 +326,7 @@ class ThreadPoolWork {
  
  // Functions defined in node.cc that are exposed via the bootstrapper object
  

@@ -2,12 +2,12 @@ Index: vscode/node-src/lib/os.js
 ===================================================================
 --- vscode.orig/node-src/lib/os.js
 +++ vscode/node-src/lib/os.js
-@@ -191,7 +191,7 @@ function tmpdir() {
-     path = safeGetenv('TMPDIR') ||
-            safeGetenv('TMP') ||
-            safeGetenv('TEMP') ||
--           '/tmp';
-+           '/data/data/vn.vhn.vsc/files/tmp';
-     if (path.length > 1 && StringPrototypeEndsWith(path, '/'))
-       path = StringPrototypeSlice(path, 0, -1);
+@@ -190,7 +190,7 @@ function tmpdir() {
+     return path;
    }
+ 
+-  return getTempDir() || '/tmp';
++  return getTempDir() || '/data/data/vn.vhn.vsc/files/tmp';
+ }
+ tmpdir[SymbolToPrimitive] = () => tmpdir();
+ 

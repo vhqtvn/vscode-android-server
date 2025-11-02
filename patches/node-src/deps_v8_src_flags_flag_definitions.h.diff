@@ -2,12 +2,12 @@ Index: vscode/node-src/deps/v8/src/flags/flag-definitions.h
 ===================================================================
 --- vscode.orig/node-src/deps/v8/src/flags/flag-definitions.h
 +++ vscode/node-src/deps/v8/src/flags/flag-definitions.h
-@@ -2364,7 +2364,7 @@ DEFINE_BOOL_READONLY(
+@@ -2837,7 +2837,7 @@ DEFINE_BOOL_READONLY(
  #undef DEFINE_PERF_PROF_BOOL
  #undef DEFINE_PERF_PROF_IMPLICATION
  
 -DEFINE_STRING(gc_fake_mmap, "/tmp/__v8_gc__",
 +DEFINE_STRING(gc_fake_mmap, "/data/data/vn.vhn.vsc/files/tmp/__v8_gc__",
                "Specify the name of the file for fake gc mmap used in ll_prof")
- DEFINE_BOOL(log_internal_timer_events, false, "Time internal events.")
- DEFINE_IMPLICATION(log_internal_timer_events, prof)
+ 
+ DEFINE_BOOL(redirect_code_traces, false,

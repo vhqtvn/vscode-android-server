@@ -11,14 +11,16 @@ Index: vscode/node-src/tools/gyp/pylib/gyp/generator/ninja.py
      "PRODUCT_DIR": "$!PRODUCT_DIR",
      "CONFIGURATION_NAME": "$|CONFIGURATION_NAME",
      # Special variables that may be used by gyp 'rule' targets.
-@@ -284,6 +284,10 @@ class NinjaWriter:
- 
+@@ -283,6 +283,12 @@ class NinjaWriter:
          CONFIGURATION_NAME = "$|CONFIGURATION_NAME"
          path = path.replace(CONFIGURATION_NAME, self.config_name)
+ 
 +        obj = "obj"
 +        if self.toolset != "target":
 +            obj += "." + self.toolset
++
 +        path = path.replace("$|OBJ", obj)
- 
++
          return path
  
+     def ExpandRuleVariables(self, path, root, dirname, source, ext, name):

@@ -2,7 +2,7 @@ Index: vscode/node-src/deps/uv/src/unix/core.c
 ===================================================================
 --- vscode.orig/node-src/deps/uv/src/unix/core.c
 +++ vscode/node-src/deps/uv/src/unix/core.c
-@@ -1173,7 +1173,7 @@ int uv_os_tmpdir(char* buffer, size_t* s
+@@ -1253,7 +1253,7 @@ int uv_os_tmpdir(char* buffer, size_t* s
  
    /* No temp environment variables defined */
    #if defined(__ANDROID__)

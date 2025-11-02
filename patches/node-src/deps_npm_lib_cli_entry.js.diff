@@ -13,4 +13,4 @@ Index: vscode/node-src/deps/npm/lib/cli/entry.js
 +    // updateNotifier(npm).then((msg) => (npm.updateNotification = msg))
  
      await execPromise
-     return exitHandler()
+     return exitHandler.exit()

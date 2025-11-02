@@ -2,7 +2,7 @@ Index: vscode/node-src/node.gyp
 ===================================================================
 --- vscode.orig/node-src/node.gyp
 +++ vscode/node-src/node.gyp
-@@ -1006,295 +1006,6 @@
+@@ -1037,314 +1037,6 @@
          },
        ],
      }, # node_lib_target_name
@@ -12,8 +12,8 @@ Index: vscode/node-src/node.gyp
 -      'dependencies': [
 -        '<(node_lib_target_name)',
 -        'deps/histogram/histogram.gyp:histogram',
--        'deps/uvwasi/uvwasi.gyp:uvwasi',
 -      ],
+-
 -      'includes': [
 -        'node.gypi'
 -      ],
@@ -23,9 +23,9 @@ Index: vscode/node-src/node.gyp
 -        'deps/v8/include',
 -        'deps/cares/include',
 -        'deps/uv/include',
--        'deps/uvwasi/include',
 -        'test/cctest',
 -      ],
+-
 -      'defines': [
 -        'NODE_ARCH="<(target_arch)"',
 -        'NODE_PLATFORM="<(OS)"',
@@ -36,11 +36,11 @@ Index: vscode/node-src/node.gyp
 -        'test/fuzzers/fuzz_env.cc',
 -      ],
 -      'conditions': [
--        ['OS=="linux"', {
+-        ['OS=="linux" or OS=="openharmony"', {
 -          'ldflags': [ '-fsanitize=fuzzer' ]
 -        }],
 -        # Ensure that ossfuzz flag has been set and that we are on Linux
--        [ 'OS!="linux" or ossfuzz!="true"', {
+-        [ 'OS not in "linux openharmony" or ossfuzz!="true"', {
 -          'type': 'none',
 -        }],
 -        # Avoid excessive LTO
@@ -55,7 +55,6 @@ Index: vscode/node-src/node.gyp
 -      'dependencies': [
 -        '<(node_lib_target_name)',
 -        'deps/histogram/histogram.gyp:histogram',
--        'deps/uvwasi/uvwasi.gyp:uvwasi',
 -      ],
 -      'includes': [
 -        'node.gypi'
@@ -66,7 +65,6 @@ Index: vscode/node-src/node.gyp
 -        'deps/v8/include',
 -        'deps/cares/include',
 -        'deps/uv/include',
--        'deps/uvwasi/include',
 -        'test/cctest',
 -      ],
 -      'defines': [
@@ -79,11 +77,15 @@ Index: vscode/node-src/node.gyp
 -        'test/fuzzers/fuzz_ClientHelloParser.cc',
 -      ],
 -      'conditions': [
--        ['OS=="linux"', {
+-        [ 'node_shared_uvwasi=="false"', {
+-          'dependencies': [ 'deps/uvwasi/uvwasi.gyp:uvwasi' ],
+-          'include_dirs': [ 'deps/uvwasi/include' ],
+-        }],
+-        ['OS=="linux" or OS=="openharmony"', {
 -          'ldflags': [ '-fsanitize=fuzzer' ]
 -        }],
 -        # Ensure that ossfuzz flag has been set and that we are on Linux
--        [ 'OS!="linux" or ossfuzz!="true"', {
+-        [ 'OS not in "linux openharmony" or ossfuzz!="true"', {
 -          'type': 'none',
 -        }],
 -        # Avoid excessive LTO
@@ -99,8 +101,7 @@ Index: vscode/node-src/node.gyp
 -        '<(node_lib_target_name)',
 -        'deps/googletest/googletest.gyp:gtest_prod',
 -        'deps/histogram/histogram.gyp:histogram',
--        'deps/uvwasi/uvwasi.gyp:uvwasi',
--        'deps/ada/ada.gyp:ada',
+-        'deps/nbytes/nbytes.gyp:nbytes',
 -      ],
 -      'includes': [
 -        'node.gypi'
@@ -111,7 +112,6 @@ Index: vscode/node-src/node.gyp
 -        'deps/v8/include',
 -        'deps/cares/include',
 -        'deps/uv/include',
--        'deps/uvwasi/include',
 -        'test/cctest',
 -      ],
 -      'defines': [
@@ -124,11 +124,15 @@ Index: vscode/node-src/node.gyp
 -        'test/fuzzers/fuzz_strings.cc',
 -      ],
 -      'conditions': [
--        ['OS=="linux"', {
+-        [ 'node_shared_uvwasi=="false"', {
+-          'dependencies': [ 'deps/uvwasi/uvwasi.gyp:uvwasi' ],
+-          'include_dirs': [ 'deps/uvwasi/include' ],
+-        }],
+-        ['OS=="linux" or OS=="openharmony"', {
 -          'ldflags': [ '-fsanitize=fuzzer' ]
 -        }],
 -        # Ensure that ossfuzz flag has been set and that we are on Linux
--        [ 'OS!="linux" or ossfuzz!="true"', {
+-        [ 'OS not in "linux openharmony" or ossfuzz!="true"', {
 -          'type': 'none',
 -        }],
 -        # Avoid excessive LTO
@@ -143,13 +147,11 @@ Index: vscode/node-src/node.gyp
 -
 -      'dependencies': [
 -        '<(node_lib_target_name)',
--        'deps/base64/base64.gyp:base64',
 -        'deps/googletest/googletest.gyp:gtest',
 -        'deps/googletest/googletest.gyp:gtest_main',
 -        'deps/histogram/histogram.gyp:histogram',
--        'deps/uvwasi/uvwasi.gyp:uvwasi',
--        'deps/simdutf/simdutf.gyp:simdutf',
--        'deps/ada/ada.gyp:ada',
+-        'deps/nbytes/nbytes.gyp:nbytes',
+-        'tools/v8_gypfiles/abseil.gyp:abseil',
 -      ],
 -
 -      'includes': [
@@ -162,7 +164,6 @@ Index: vscode/node-src/node.gyp
 -        'deps/v8/include',
 -        'deps/cares/include',
 -        'deps/uv/include',
--        'deps/uvwasi/include',
 -        'test/cctest',
 -      ],
 -
@@ -179,17 +180,29 @@ Index: vscode/node-src/node.gyp
 -          'defines': [
 -            'HAVE_OPENSSL=1',
 -          ],
--          'sources': [ '<@(node_cctest_openssl_sources)' ],
+-          'dependencies': [
+-            'deps/ncrypto/ncrypto.gyp:ncrypto',
+-          ],
+-        }, {
+-          'sources!': [ '<@(node_cctest_openssl_sources)' ],
 -        }],
 -        ['v8_enable_inspector==1', {
 -          'defines': [
 -            'HAVE_INSPECTOR=1',
 -          ],
--          'sources': [ '<@(node_cctest_inspector_sources)' ],
+-          'include_dirs': [
+-            # TODO(legendecas): make node_inspector.gypi a dependable target.
+-            '<(SHARED_INTERMEDIATE_DIR)', # for inspector
+-            '<(SHARED_INTERMEDIATE_DIR)/src', # for inspector
+-          ],
+-          'dependencies': [
+-            'deps/inspector_protocol/inspector_protocol.gyp:crdtp',
+-          ],
 -        }, {
 -           'defines': [
 -             'HAVE_INSPECTOR=0',
--           ]
+-           ],
+-           'sources!': [ '<@(node_cctest_inspector_sources)' ],
 -        }],
 -        ['OS=="solaris"', {
 -          'ldflags': [ '-I<(SHARED_INTERMEDIATE_DIR)' ]
@@ -224,8 +237,7 @@ Index: vscode/node-src/node.gyp
 -      'dependencies': [
 -        '<(node_lib_target_name)',
 -        'deps/histogram/histogram.gyp:histogram',
--        'deps/uvwasi/uvwasi.gyp:uvwasi',
--        'deps/ada/ada.gyp:ada',
+-        'deps/nbytes/nbytes.gyp:nbytes',
 -      ],
 -
 -      'includes': [
@@ -234,11 +246,11 @@ Index: vscode/node-src/node.gyp
 -
 -      'include_dirs': [
 -        'src',
+-        'tools',
 -        'tools/msvs/genfiles',
 -        'deps/v8/include',
 -        'deps/cares/include',
 -        'deps/uv/include',
--        'deps/uvwasi/include',
 -        'test/embedding',
 -      ],
 -
@@ -295,10 +307,17 @@ Index: vscode/node-src/node.gyp
 -        }],
 -      ]
 -    }, # overlapped-checker
+-    {
+-      'target_name': 'nop',
+-      'type': 'executable',
+-      'sources': [
+-        'test/nop/nop.c',
+-      ]
+-    }, # nop
      {
        'target_name': 'node_js2c',
        'type': 'executable',
-@@ -1331,69 +1042,6 @@
+@@ -1381,70 +1073,6 @@
          }],
        ]
      },
@@ -309,8 +328,7 @@ Index: vscode/node-src/node.gyp
 -      'dependencies': [
 -        '<(node_lib_target_name)',
 -        'deps/histogram/histogram.gyp:histogram',
--        'deps/uvwasi/uvwasi.gyp:uvwasi',
--        'deps/ada/ada.gyp:ada',
+-        'deps/nbytes/nbytes.gyp:nbytes',
 -      ],
 -
 -      'includes': [
@@ -323,7 +341,6 @@ Index: vscode/node-src/node.gyp
 -        'deps/v8/include',
 -        'deps/cares/include',
 -        'deps/uv/include',
--        'deps/uvwasi/include',
 -      ],
 -
 -      'defines': [ 'NODE_WANT_INTERNALS=1' ],
@@ -338,6 +355,9 @@ Index: vscode/node-src/node.gyp
 -          'defines': [ 'NODE_MKSNAPSHOT_USE_ARRAY_LITERALS=1' ],
 -        }],
 -        [ 'node_use_openssl=="true"', {
+-          'dependencies': [
+-            'deps/ncrypto/ncrypto.gyp:ncrypto',
+-          ],
 -          'defines': [
 -            'HAVE_OPENSSL=1',
 -          ],

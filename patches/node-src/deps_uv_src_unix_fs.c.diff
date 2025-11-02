@@ -2,7 +2,7 @@ Index: vscode/node-src/deps/uv/src/unix/fs.c
 ===================================================================
 --- vscode.orig/node-src/deps/uv/src/unix/fs.c
 +++ vscode/node-src/deps/uv/src/unix/fs.c
-@@ -1322,7 +1322,7 @@ static ssize_t uv__fs_copyfile(uv_fs_t*
+@@ -1354,7 +1354,7 @@ static ssize_t uv__fs_copyfile(uv_fs_t*
  #endif  /* !__linux__ */
    }
  

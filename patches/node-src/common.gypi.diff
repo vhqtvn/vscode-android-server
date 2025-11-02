@@ -1,0 +1,15 @@
+Index: vscode/node-src/common.gypi
+===================================================================
+--- vscode.orig/node-src/common.gypi
++++ vscode/node-src/common.gypi
+@@ -245,10 +245,6 @@
+               },],
+             ],
+           },],
+-          ['OS == "android"', {
+-            'cflags': [ '-fPIC', '-I<(android_ndk_path)/sources/android/cpufeatures' ],
+-            'ldflags': [ '-fPIC' ]
+-          }],
+           ['clang==1', {
+             'msbuild_toolset': 'ClangCL',
+           }],
