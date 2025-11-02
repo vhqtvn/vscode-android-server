@@ -14,4 +14,3 @@ node.gyp.diff
 src_node_internals.h.diff
 tools_gyp_pylib_gyp_generator_ninja.py.diff
 tools_v8_gypfiles_v8.gyp.diff
-common.gypi.diff
