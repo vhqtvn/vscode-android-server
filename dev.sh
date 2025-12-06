@@ -204,6 +204,9 @@ main() {
             pushd lib/vscode
                   $NPM_BIN ci
             popd
+            if [[ ! -f package-lock.json ]]; then
+              $USERRUN mv -f package-lock.json.origbk package-lock.json || true
+            fi
             $NPM_BIN run build
             DISABLE_V8_COMPILE_CACHE=1 $NPM_BIN run build:vscode
             $NPM_BIN run release
