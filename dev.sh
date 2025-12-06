@@ -159,8 +159,11 @@ main() {
           chmod 0747 "$f.orig"
         done
         export VERSION=$(cd code-server && git describe --tags)
-        NPM_BIN="$USERRUN npm_config_build_from_source=true CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH npm"
         if [ ! -z "$BUILD_RELEASE" ]; then
+          ./scripts/vseditor-repo.sh activate $ANDROID_ARCH
+          ./scripts/vseditor-repo.sh install krb5
+          VHEDITOR_REPO_ABS="$(cd $(dirname $0) && pwd)/scripts/vseditor-repo.sh"
+          NPM_BIN="$USERRUN npm_config_build_from_source=true CC_target=cc AR_target=ar CXX_target=cxx LINK_target=ld PATH=/vscode-build/bin:$PATH $VHEDITOR_REPO_ABS env npm"
           pushd code-server
             $USERRUN git checkout -f HEAD
             git clean -dfx
@@ -172,38 +175,38 @@ main() {
             # codeserver_remove_unuseful_node_modules lib/vscode/remote
             npm cache clean --force
             $USERRUN npm cache clean --force
-            # sub_builder() {
-            #   find $1 -iname package-lock.json | grep -v node_modules | while IPS= read dir
-            #   do
-            #     [[ "$dir" == "./test/unit/node/test-plugin/package-lock.json" ]] && continue
-            #     echo "$dir"
-            #     pushd "$(dirname "$dir")"
-            #     set -x
-            #       echo "* Work on $(pwd)"
-            #       $NPM_BIN ci
-            #       [[ "$(jq ".scripts.build" package.json )" != "null" ]] && $NPM_BIN run build
-            #       [[ "$(jq ".scripts.release" package.json )" != "null" ]] && $NPM_BIN run release
-            #       [[ "$(jq ".scripts[\"release:standalone\"]" package.json )" != "null" ]] && $NPM_BIN run release:standalone
-            #     set +x
-            #     popd
-            #   done
-            # }
-            # rm -rf release release-standalone node_modules
-            # export NODE_PATH=/usr/lib/node_modules
-            # npm install -g @mapbox/node-pre-gyp node-addon-api
-            # $USERRUN mv -f package-lock.json.origbk package-lock.json || true
-            # $NPM_BIN ci
-            # $USERRUN mv -f package-lock.json package-lock.json.origbk || true
-            # sub_builder .
-            # $USERRUN mv -f package-lock.json package-lock.json.origbk || true
-            # sub_builder lib
-            # pushd lib/vscode
-            #       $NPM_BIN ci
-            # popd
-            # $NPM_BIN run build
-            # DISABLE_V8_COMPILE_CACHE=1 $NPM_BIN run build:vscode
-            # $NPM_BIN run release
-            #
+            sub_builder() {
+              find $1 -iname package-lock.json | grep -v node_modules | while IPS= read dir
+              do
+                [[ "$dir" == "./test/unit/node/test-plugin/package-lock.json" ]] && continue
+                [[ "$dir" == "./test/unit/node/test-plugin/package-lock.json" ]] && continue
+                echo "$dir"
+                pushd "$(dirname "$dir")"
+                set -x
+                  echo "* Work on $(pwd)"
+                  $NPM_BIN ci
+                  [[ "$(jq ".scripts.build" package.json )" != "null" ]] && $NPM_BIN run build
+                  [[ "$(jq ".scripts.release" package.json )" != "null" ]] && $NPM_BIN run release
+                  [[ "$(jq ".scripts[\"release:standalone\"]" package.json )" != "null" ]] && $NPM_BIN run release:standalone
+                set +x
+                popd
+              done
+            }
+            rm -rf release release-standalone node_modules
+            export NODE_PATH=/usr/lib/node_modules
+            npm install -g @mapbox/node-pre-gyp node-addon-api
+            $USERRUN mv -f package-lock.json.origbk package-lock.json || true
+            $NPM_BIN ci
+            $USERRUN mv -f package-lock.json package-lock.json.origbk || true
+            sub_builder .
+            $USERRUN mv -f package-lock.json package-lock.json.origbk || true
+            sub_builder lib
+            pushd lib/vscode
+                  $NPM_BIN ci
+            popd
+            $NPM_BIN run build
+            DISABLE_V8_COMPILE_CACHE=1 $NPM_BIN run build:vscode
+            $NPM_BIN run release
             $NPM_BIN run release:standalone
             cd release-standalone
             $NPM_BIN ci --production

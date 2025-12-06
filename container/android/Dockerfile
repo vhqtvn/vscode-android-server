@@ -41,7 +41,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
 
 # Install NodeJS
 #  from official docs: https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
-RUN curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+RUN curl -sL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 RUN sudo apt-get install -y nodejs
 
 # Install npm 
