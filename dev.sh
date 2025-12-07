@@ -171,6 +171,10 @@ main() {
             git submodule foreach --recursive 'git clean -dfx'
             quilt push -a # changes made by code-server
             (cd ..;rm -rf .pc;QUILT_PATCHES=patches/code-server quilt push -a) || true # changes made by me
+            # we dont run tests but its packages are problematic, so just remove them
+            rm -f test/package-lock.json test/package.json || true
+            # create dummy package.json
+            (cd test && echo '{"name":"test","version":"1.0.0","dependencies":{}}' > package.json && chmod 0644 package.json)
             # codeserver_remove_unuseful_node_modules lib/vscode
             # codeserver_remove_unuseful_node_modules lib/vscode/remote
             npm cache clean --force
@@ -205,7 +209,7 @@ main() {
             pushd lib/vscode
                   $NPM_BIN ci
             popd
-            if [[ ! -f package-lock.json ]]; then
+            if [[ ! -f package-lock.json ]] && [[ -f package-lock.json.origbk ]]; then
               $USERRUN mv -f package-lock.json.origbk package-lock.json || true
             fi
             $NPM_BIN run build
