@@ -178,8 +178,9 @@ main() {
             sub_builder() {
               find $1 -iname package-lock.json | grep -v node_modules | while IPS= read dir
               do
-                [[ "$dir" == "./test/unit/node/test-plugin/package-lock.json" ]] && continue
-                [[ "$dir" == "./test/unit/node/test-plugin/package-lock.json" ]] && continue
+                if [[ "$dir" == ./test/* ]]; then
+                  continue
+                fi
                 echo "$dir"
                 pushd "$(dirname "$dir")"
                 set -x
