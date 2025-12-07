@@ -11,8 +11,10 @@ ARCH_FILE="$PREFIX/.current-arch"
 REPO_URL="https://vsc.vhn.vn/termux-packages-24"
 KEY_URL="https://raw.githubusercontent.com/vhqtvn/VHEditor-Android/refs/heads/master/app/src/main/res/raw/vhnvn.gpg"
 SUPPORTED_ARCHES=("aarch64" "arm" "i686" "x86_64")
+REMAP_ARCHES=([x86]="i686")
 KEY_ID="40BBE8394CCCDE8F"
 KEYSERVER="hkps://keyserver.ubuntu.com"
+
 
 BUILDING_USER=$(ls -n /vscode/dev.sh | awk '{print $3}')
 if [ "$EUID" -ne 0 ]; then
@@ -142,6 +144,9 @@ move_with_suffix_if_exists() {
 
 activate() {
   local arch="$1"
+  if [[ -n "${REMAP_ARCHES[$arch]}" ]]; then
+    arch="${REMAP_ARCHES[$arch]}"
+  fi
   require_arch "$arch"
 
   if [[ -d "$PREFIX_BASE" && -f "$ARCH_FILE" ]]; then
