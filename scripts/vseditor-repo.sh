@@ -11,7 +11,7 @@ ARCH_FILE="$PREFIX/.current-arch"
 REPO_URL="https://vsc.vhn.vn/termux-packages-24"
 KEY_URL="https://raw.githubusercontent.com/vhqtvn/VHEditor-Android/refs/heads/master/app/src/main/res/raw/vhnvn.gpg"
 SUPPORTED_ARCHES=("aarch64" "arm" "i686" "x86_64")
-REMAP_ARCHES=([x86]="i686")
+declare -A REMAP_ARCHES=([x86]="i686")
 KEY_ID="40BBE8394CCCDE8F"
 KEYSERVER="hkps://keyserver.ubuntu.com"
 
@@ -144,8 +144,8 @@ move_with_suffix_if_exists() {
 
 activate() {
   local arch="$1"
-  if [[ -n "${REMAP_ARCHES[$arch]}" ]]; then
-    arch="${REMAP_ARCHES[$arch]}"
+  if [[ -v REMAP_ARCHES[$arch] && -n ${REMAP_ARCHES[$arch]} ]]; then
+      arch="${REMAP_ARCHES[$arch]}"
   fi
   require_arch "$arch"
 
