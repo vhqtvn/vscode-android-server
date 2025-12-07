@@ -218,7 +218,7 @@ run_env() {
 
   export CPPFLAGS LDFLAGS PKG_CONFIG_LIBDIR PKG_CONFIG_PATH CFLAGS CXXFLAGS
 
-  echo "Running in vh editor root: $@" >/dev/stderr
+  echo "Running in vh editor root: $@" >&2
   "$@"
 }
 
