@@ -19,6 +19,17 @@ for a in sys.argv:
             content = f.read()
         with open(a,"w") as f:
             f.write(content)
+    elif ("tree-sitter" in cwd or "tree_sitter" in cwd) and ("query.cc" in a) and os.path.isfile(a):
+        # fix for compiler error: ambiguous operator[]
+        print("[vh] Patch tree-sitter query.cc")
+        with open(a, "r") as f:
+            content = f.read()
+        new_content = content
+        new_content = re.sub(r'result\[\s*1\s*\]\s*=\s*js_nodes\s*;', 'result.Set(1u, js_nodes);', new_content)
+        new_content = re.sub(r'result\[\s*1\s*\]\s*=\s*js_matches\s*;', 'result.Set(1u, js_matches);', new_content)
+        if new_content != content:
+            with open(a, "w") as f:
+                f.write(new_content)
     elif ("WatchmanBackend.cc" in a) and os.path.isfile(a):
         print("[vh] Patch WatchmanBackend.cc")
         with open(a,"r") as f:
