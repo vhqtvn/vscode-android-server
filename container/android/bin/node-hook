@@ -38,6 +38,17 @@ else
     :
 fi
 
+ADJUSTED_ARGS=()
+for a in "$@"; do
+    if [[ "$a" =~ ^--max-old-space-size=([0-9]+)$ ]]; then
+        val="${BASH_REMATCH[1]}"
+        if (( val > 8192 )); then
+            a="--max-old-space-size=8192"
+        fi
+    fi
+    ADJUSTED_ARGS+=( "$a" )
+done
+
 # echo "> Node run: (cwd: $(pwd)) " $NODE_BIN "${INJECT_ARGS[@]}" "${@}" >> /tmp/log
 
-LD_PRELOAD=/vscode-build/lib/node-preload.so "$NODE_BIN" "${INJECT_ARGS[@]}" "$@" "${APPEND_ARGS[@]}"
+LD_PRELOAD=/vscode-build/lib/node-preload.so "$NODE_BIN" "${INJECT_ARGS[@]}" "${ADJUSTED_ARGS[@]}" "${APPEND_ARGS[@]}"
