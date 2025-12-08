@@ -319,7 +319,9 @@ install_pkg() {
   rewrite_status_arch "$arch"
   rewrite_cached_archives "$arch"
   info "installing '$pkg' into $PREFIX (arch: $arch)"
-  dpkg --admindir="$PREFIX/var/lib/dpkg" --root="$PREFIX" \
+  # Do not use --root here; Termux packages already contain the full prefix
+  # in their paths, and adding a root causes a duplicated prefix.
+  dpkg --admindir="$PREFIX/var/lib/dpkg" \
     --force-architecture --force-depends -i "$PREFIX"/var/cache/apt/archives/*.deb
 }
 
