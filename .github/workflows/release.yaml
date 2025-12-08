@@ -35,7 +35,9 @@ jobs:
             firefox google-chrome-stable microsoft-edge-stable mono-devel mono-runtime-common monodoc-manual ruby
           sudo apt autoremove -yq
           sudo apt clean
-          sudo rm -fr /opt/ghc /opt/hostedtoolcache /usr/lib/node_modules /usr/local /usr/share/dotnet /usr/share/swift
+          sudo rm -fr /opt/ghc /opt/hostedtoolcache /usr/lib/node_modules /usr/local /usr/share/dotnet /usr/share/swift /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          sudo docker builder prune -a
       - name: Add swap for heavy builds
         run: |
           sudo swapoff -a || true
