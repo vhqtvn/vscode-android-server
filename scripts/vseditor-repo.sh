@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+set -x
 
 # Manage Termux-style packages for VS Editor prefix.
 # Repository: https://vsc.vhn.vn/termux-packages-24
@@ -71,7 +72,7 @@ normalize_apt_arch() {
 # Rewrite dpkg metadata to a dpkg-legal arch when Termux uses x86_64.
 rewrite_status_arch() {
   local arch="$1"
-  [[ "$arch" == "x86_64" ]] || return
+  [[ "$arch" == "x86_64" ]] || return 0
   local files=(
     "$PREFIX/var/lib/dpkg/status"
     "$PREFIX/var/lib/dpkg/available"
@@ -89,7 +90,7 @@ rewrite_status_arch() {
 # Rewrite cached .deb control files from Architecture: x86_64 to amd64 so stock dpkg accepts them.
 rewrite_cached_archives() {
   local arch="$1"
-  [[ "$arch" == "x86_64" ]] || return
+  [[ "$arch" == "x86_64" ]] || return 0
   shopt -s nullglob
   for deb in "$PREFIX"/var/cache/apt/archives/"*.deb"; do
     local tmp
@@ -107,7 +108,7 @@ rewrite_cached_archives() {
 
 rewrite_package_lists_arch() {
   local arch="$1"
-  [[ "$arch" == "x86_64" ]] || return
+  [[ "$arch" == "x86_64" ]] || return 0
   shopt -s nullglob
   for pkglist in "$PREFIX"/var/lib/apt/lists/*_Packages "$PREFIX"/var/lib/apt/lists/*_Packages.lz4; do
     [[ -f "$pkglist" ]] || continue
@@ -136,11 +137,11 @@ rewrite_package_lists_arch() {
 
 rewrite_release_arch() {
   local arch="$1"
-  [[ "$arch" == "x86_64" ]] || return
+  [[ "$arch" == "x86_64" ]] || return 0
   local rel="$PREFIX/var/lib/apt/lists/vsc.vhn.vn_termux-packages-24_dists_stable_Release"
-  [[ -f "$rel" ]] || return
+  [[ -f "$rel" ]] || return 0
   if $USERRUN grep -q 'amd64' "$rel" >/dev/null 2>&1; then
-    return
+    return 0
   fi
   $USERRUN sed -i 's/^Architectures: \(.*\)$/Architectures: \1 amd64/' "$rel" || true
 }
@@ -218,7 +219,7 @@ import_repo_key() {
   command -v gpg >/dev/null 2>&1 || err "gpg is required to import repository key"
   if $USERRUN gpg --no-default-keyring --keyring "$PREFIX/etc/apt/trusted.gpg" --list-keys "$KEY_ID" >/dev/null 2>&1; then
     info "repository key $KEY_ID already present"
-    return
+    return 0
   fi
   command -v curl >/dev/null 2>&1 || err "curl is required to download repository key"
   info "fetching repository key from $KEY_URL"
