@@ -298,4 +298,7 @@ RUN git config --global --add safe.directory /vscode \
     && git config --global --add safe.directory /vscode/code-server/lib/vscode \
     && git config --global --add safe.directory /vscode/node-src
 
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
+    lz4
+
 ENTRYPOINT /bin/bash

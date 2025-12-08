@@ -63,27 +63,128 @@ current_arch() {
   tr -d '[:space:]' <"$ARCH_FILE"
 }
 
-apt_opts() {
+normalize_apt_arch() {
   local arch="$1"
-  printf '%s\n' \
-    "-o" "Dir=$PREFIX" \
-    "-o" "Dir::Etc::sourcelist=$PREFIX/etc/apt/sources.list" \
-    "-o" "Dir::Etc::trusted=$PREFIX/etc/apt/trusted.gpg" \
-    "-o" "Dir::Etc::trustedparts=$PREFIX/etc/apt/trusted.gpg.d" \
-    "-o" "Dir::Etc::sourceparts=-" \
-    "-o" "Dir::State=$PREFIX/var/lib/apt" \
-    "-o" "Dir::Cache=$PREFIX/var/cache/apt" \
-    "-o" "APT::Architecture=$arch" \
-    "-o" "Acquire::AllowInsecureRepositories=true" \
-    "-o" "Acquire::AllowDowngradeToInsecureRepositories=true" \
-    "-o" "DPkg::Options::=--force-not-root" \
-    "-o" "DPkg::Options::=--admindir=$PREFIX/var/lib/dpkg" \
-    "-o" "DPkg::Options::=--force-architecture" \
+  echo "$arch"
+}
+
+# Rewrite dpkg metadata to a dpkg-legal arch when Termux uses x86_64.
+rewrite_status_arch() {
+  local arch="$1"
+  [[ "$arch" == "x86_64" ]] || return
+  local files=(
+    "$PREFIX/var/lib/dpkg/status"
+    "$PREFIX/var/lib/dpkg/available"
+  )
+  for f in "${files[@]}"; do
+    if [[ -f "$f" ]]; then
+      $USERRUN sed -i \
+        -e 's/^Architecture: x86_64$/Architecture: amd64/' \
+        -e 's/^Architecture: all$/Architecture: amd64/' \
+        "$f" || true
+    fi
+  done
+}
+
+# Rewrite cached .deb control files from Architecture: x86_64 to amd64 so stock dpkg accepts them.
+rewrite_cached_archives() {
+  local arch="$1"
+  [[ "$arch" == "x86_64" ]] || return
+  shopt -s nullglob
+  for deb in "$PREFIX"/var/cache/apt/archives/"*.deb"; do
+    local tmp
+    tmp="$(mktemp -d)"
+    if dpkg-deb -R "$deb" "$tmp" >/dev/null 2>&1; then
+      sed -i \
+        -e 's/^Architecture: .*/Architecture: amd64/' \
+        "$tmp/DEBIAN/control" || true
+      dpkg-deb -b "$tmp" "$deb" >/dev/null 2>&1 || true
+    fi
+    rm -rf "$tmp"
+  done
+  shopt -u nullglob
+}
+
+rewrite_package_lists_arch() {
+  local arch="$1"
+  [[ "$arch" == "x86_64" ]] || return
+  shopt -s nullglob
+  for pkglist in "$PREFIX"/var/lib/apt/lists/*_Packages "$PREFIX"/var/lib/apt/lists/*_Packages.lz4; do
+    [[ -f "$pkglist" ]] || continue
+    if [[ "$pkglist" == *.lz4 ]]; then
+      command -v lz4 >/dev/null 2>&1 || continue
+      local tmp_in tmp_out
+      tmp_in="$($USERRUN mktemp)"
+      tmp_out="$($USERRUN mktemp)"
+      if $USERRUN lz4 -dfq "$pkglist" "$tmp_in" >/dev/null 2>&1; then
+        $USERRUN sed -i \
+          -e 's/^Architecture: x86_64$/Architecture: amd64/' \
+          -e 's/^Architecture: all$/Architecture: amd64/' \
+          "$tmp_in" || true
+        $USERRUN lz4 -fq "$tmp_in" "$tmp_out" >/dev/null 2>&1 && $USERRUN mv "$tmp_out" "$pkglist"
+      fi
+      $USERRUN rm -f "$tmp_in" "$tmp_out"
+    else
+      $USERRUN sed -i \
+        -e 's/^Architecture: x86_64$/Architecture: amd64/' \
+        -e 's/^Architecture: all$/Architecture: amd64/' \
+        "$pkglist" || true
+    fi
+  done
+  shopt -u nullglob
+}
+
+rewrite_release_arch() {
+  local arch="$1"
+  [[ "$arch" == "x86_64" ]] || return
+  local rel="$PREFIX/var/lib/apt/lists/vsc.vhn.vn_termux-packages-24_dists_stable_Release"
+  [[ -f "$rel" ]] || return
+  if $USERRUN grep -q 'amd64' "$rel" >/dev/null 2>&1; then
+    return
+  fi
+  $USERRUN sed -i 's/^Architectures: \(.*\)$/Architectures: \1 amd64/' "$rel" || true
+}
+
+apt_opts() {
+  local arch
+  arch="$(normalize_apt_arch "$1")"
+  local opts=(
+    "-o" "Dir=$PREFIX"
+    "-o" "Dir::Etc::sourcelist=$PREFIX/etc/apt/sources.list"
+    "-o" "Dir::Etc::trusted=$PREFIX/etc/apt/trusted.gpg"
+    "-o" "Dir::Etc::trustedparts=$PREFIX/etc/apt/trusted.gpg.d"
+    "-o" "Dir::Etc::sourceparts=-"
+    "-o" "Dir::State=$PREFIX/var/lib/apt"
+    "-o" "Dir::Cache=$PREFIX/var/cache/apt"
+    "-o" "APT::Architecture=$arch"
+    "-o" "APT::Architectures::=$arch"
+  )
+  if [[ "$arch" == "x86_64" ]]; then
+    opts+=("-o" "APT::Architectures::=amd64")
+  fi
+  opts+=(
+    "-o" "APT::Architectures::=all"
+    "-o" "Acquire::AllowInsecureRepositories=true"
+    "-o" "Acquire::AllowDowngradeToInsecureRepositories=true"
+    "-o" "Acquire::AllowWeakRepositories=true"
+    "-o" "APT::Get::AllowUnauthenticated=true"
+    "-o" "DPkg::Options::=--force-not-root"
+    "-o" "DPkg::Options::=--admindir=$PREFIX/var/lib/dpkg"
+    "-o" "DPkg::Options::=--force-architecture"
     "-o" "DPkg::Options::=--force-depends"
+  )
+  printf '%s\n' "${opts[@]}"
+}
+
+ensure_prefix_perms() {
+  chown -R $BUILDING_USER "$PREFIX/var/lib/apt" "$PREFIX/var/cache/apt" "$PREFIX/var/lib/dpkg" 2>/dev/null || true
+  chmod -R u+rwX "$PREFIX/var/lib/apt" "$PREFIX/var/cache/apt" "$PREFIX/var/lib/dpkg" 2>/dev/null || true
 }
 
 ensure_dirs() {
   local arch="$1"
+  local source_arch
+  source_arch="$(normalize_apt_arch "$arch")"
   mkdir -p "$PREFIX"
   local curr="$PREFIX"
   while [[ "$curr" != "/" ]]; do
@@ -108,7 +209,7 @@ ensure_dirs() {
   $USERRUN touch "$PREFIX/var/lib/dpkg/status"
   $USERRUN touch "$PREFIX/var/lib/dpkg/available"
 
-  echo "deb [arch=$arch] $REPO_URL stable main" | $USERRUN tee "$PREFIX/etc/apt/sources.list"
+  echo "deb [trusted=yes arch=${source_arch},all] $REPO_URL stable main" | $USERRUN tee "$PREFIX/etc/apt/sources.list"
   import_repo_key
   echo "$arch" | $USERRUN tee "$ARCH_FILE"
 }
@@ -147,13 +248,29 @@ activate() {
   if [[ -v REMAP_ARCHES[$arch] && -n ${REMAP_ARCHES[$arch]} ]]; then
       arch="${REMAP_ARCHES[$arch]}"
   fi
+  local apt_arch
+  apt_arch="$(normalize_apt_arch "$arch")"
   require_arch "$arch"
+  rewrite_status_arch "$arch"
+  rewrite_cached_archives "$arch"
+  ensure_prefix_perms
 
   if [[ -d "$PREFIX_BASE" && -f "$ARCH_FILE" ]]; then
     local curr
     curr="$(current_arch)"
     if [[ "$curr" == "$arch" ]]; then
-      info "arch '$arch' already active"
+      info "arch '$arch' already active; refreshing sources"
+      local apt_arch_refresh
+      apt_arch_refresh="$(normalize_apt_arch "$arch")"
+      echo "deb [trusted=yes arch=${apt_arch_refresh},all] $REPO_URL stable main" | $USERRUN tee "$PREFIX/etc/apt/sources.list"
+      import_repo_key
+      rewrite_status_arch "$arch"
+      rewrite_cached_archives "$arch"
+      local opts
+      mapfile -t opts < <(apt_opts "$apt_arch_refresh")
+      $USERRUN apt-get "${opts[@]}" update >/dev/null 2>&1
+      rewrite_package_lists_arch "$arch"
+      rewrite_release_arch "$arch"
       return 0
     fi
     local backup_curr="${PREFIX_BASE}.bk-${curr}"
@@ -174,26 +291,38 @@ activate() {
 
   info "updating package lists for '$arch'"
   local opts
-  mapfile -t opts < <(apt_opts "$arch")
+  mapfile -t opts < <(apt_opts "$apt_arch")
   $USERRUN apt-get "${opts[@]}" update >/dev/null 2>&1
+  rewrite_package_lists_arch "$arch"
+  rewrite_release_arch "$arch"
   info "activation complete for arch '$arch'"
 }
 
 install_pkg() {
   local pkg="$1"
   local arch
+  local apt_arch
   arch="$(current_arch)"
+  apt_arch="$(normalize_apt_arch "$arch")"
+  rewrite_status_arch "$arch"
+  rewrite_cached_archives "$arch"
+  ensure_prefix_perms
   local opts
-  mapfile -t opts < <(apt_opts "$arch")
+  mapfile -t opts < <(apt_opts "$apt_arch")
   info "updating package lists for '$arch'"
   $USERRUN apt-get "${opts[@]}" update
+  rewrite_package_lists_arch "$arch"
+  rewrite_release_arch "$arch"
+  info "downloading '$pkg' (defer install to allow arch rewrite)"
+  $USERRUN apt-get "${opts[@]}" -d install -y "$pkg"
+  rewrite_status_arch "$arch"
+  rewrite_cached_archives "$arch"
   info "installing '$pkg' into $PREFIX (arch: $arch)"
-  $USERRUN apt-get "${opts[@]}" install -y "$pkg"
+  dpkg --admindir="$PREFIX/var/lib/dpkg" --root="$PREFIX" \
+    --force-architecture --force-depends -i "$PREFIX"/var/cache/apt/archives/*.deb
 }
 
 run_env() {
-  local arch
-  arch="$(current_arch)"
   local inc_flag="-I$PREFIX/include"
   local ld_flag="-L$PREFIX/lib -Wl,-rpath,$PREFIX/lib"
   local pc_libdir="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig"
