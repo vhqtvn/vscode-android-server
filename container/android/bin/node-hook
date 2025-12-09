@@ -40,12 +40,6 @@ fi
 
 ADJUSTED_ARGS=()
 for a in "$@"; do
-    if [[ "$a" =~ ^--max-old-space-size=([0-9]+)$ ]]; then
-        val="${BASH_REMATCH[1]}"
-        if (( val > 8192 )); then
-            a="--max-old-space-size=8192"
-        fi
-    fi
     ADJUSTED_ARGS+=( "$a" )
 done
 

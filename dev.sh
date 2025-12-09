@@ -268,7 +268,6 @@ main() {
         set -x
         docker run --rm \
                 -w /vscode \
-                --memory=13g \
                 --memory-swap=-1 \
                 -e ANDROID_BUILD_API_VERSION=24 \
                 -v $(pwd):/vscode \
